@@ -41,7 +41,13 @@ export class PlaylistService {
     return await this.prisma.playlist.findUnique({
       where: { id },
       include: {
-        tracks: true,
+        tracks: {
+          include: {
+            artistEntity: true,
+            albumEntity: true,
+            likedByUsers: true,
+          }
+        },
       },
     });
   }

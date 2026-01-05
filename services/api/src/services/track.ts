@@ -46,6 +46,7 @@ export class TrackService {
       include: {
         artistEntity: true,
         albumEntity: true,
+        likedByUsers: true,
       },
     });
   }
@@ -80,6 +81,7 @@ export class TrackService {
       include: {
         artistEntity: true,
         albumEntity: true,
+        likedByUsers: true
       },
     });
 
@@ -112,6 +114,7 @@ export class TrackService {
       include: {
         artistEntity: true,
         albumEntity: true,
+        likedByUsers: true,
       },
     });
   }
@@ -123,6 +126,7 @@ export class TrackService {
       include: {
         artistEntity: true,
         albumEntity: true,
+        likedByUsers: true,
       },
     });
   }
@@ -261,6 +265,7 @@ export class TrackService {
       include: {
         artistEntity: true,
         albumEntity: true,
+        likedByUsers: true,
       },
     });
   }
@@ -274,6 +279,7 @@ export class TrackService {
       include: {
         artistEntity: true,
         albumEntity: true,
+        likedByUsers: true,
       },
     });
   }
@@ -291,6 +297,7 @@ export class TrackService {
       include: {
         artistEntity: true,
         albumEntity: true,
+        likedByUsers: true,
       },
     });
     return tracks.sort(() => Math.random() - 0.5);
@@ -304,6 +311,7 @@ export class TrackService {
       include: {
         artistEntity: true,
         albumEntity: true,
+        likedByUsers: true,
       },
     });
     return await this.attachProgressToTracks(tracks, 1);

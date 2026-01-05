@@ -51,7 +51,13 @@ export class UserTrackLikeService {
       },
       distinct: ['trackId'],
       include: {
-        track: true,
+        track: {
+          include: {
+            artistEntity: true,
+            albumEntity: true,
+            likedByUsers: true,
+          }
+        },
       },
     });
   }

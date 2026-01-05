@@ -201,7 +201,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           // Report progress of previous track before switching
           reportProgress(get(), true);
           lastReportTime = 0; // Reset for new track
-
           set({ currentTrack: track, isPlaying: true, currentTime: startTime || 0 });
           // Persist currentTrack change immediately.
           const state = get();
@@ -321,7 +320,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       const userId = useAuthStore.getState().user?.id;
       if (userId) {
-          addToHistory(nextTrack.id, userId).catch(console.error);
+        addToHistory(nextTrack.id, userId).catch(console.error);
       }
 
       // Persist
@@ -353,7 +352,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       const userId = useAuthStore.getState().user?.id;
       if (userId) {
-          addToHistory(prevTrack.id, userId).catch(console.error);
+        addToHistory(prevTrack.id, userId).catch(console.error);
       }
 
       // Persist
@@ -383,18 +382,41 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       try {
         const userId = useAuthStore.getState().user?.id;
         if (!userId) {
-             console.warn("User not logged in, cannot toggle like");
-             return;
+          console.warn("User not logged in, cannot toggle like");
+          return;
         }
         await (type === "like" ? toggleLike(trackId, userId) : toggleUnLike(trackId, userId));
-        const { currentTrack } = get();
-        if (currentTrack?.id === trackId) {
-          // The instruction explicitly removes the optimistic update of `likedByUsers`
-          // to avoid type errors and complexity with mocking UserTrackLike objects.
-          // The previous code was also pushing `userId` directly, which was incorrect
-          // if `likedByUsers` expects `UserTrackLike` objects.
-          // For now, we rely on the server response or a refresh to update the liked status.
-        }
+        
+        const state = get();
+        const updateTrack = (track: Track) => {
+          if (track.id !== trackId) return track;
+          let likedByUsers = track.likedByUsers || [];
+          if (type === 'like') {
+            if (!likedByUsers.some(l => l.userId === userId)) {
+               likedByUsers = [...likedByUsers, {
+                 id: 0, 
+                 trackId: trackId,
+                 userId: userId,
+                 createdAt: new Date()
+               }];
+            }
+          } else {
+            likedByUsers = likedByUsers.filter(l => l.userId !== userId);
+          }
+          return { ...track, likedByUsers };
+        };
+
+        const newCurrentTrack = state.currentTrack ? updateTrack(state.currentTrack) : null;
+        const newPlaylist = state.playlist.map(updateTrack);
+
+        set({ 
+          currentTrack: newCurrentTrack,
+          playlist: newPlaylist
+        });
+
+        // Save progress/state to localStorage
+        state._saveCurrentStateToMode();
+        
       } catch (e) {
         console.error("Failed to toggle like", e);
       }
@@ -402,7 +424,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     removeTrack: (trackId) => {
       const { currentTrack, playlist, pause, activeMode } = get();
-      
+
       // If current track is being deleted, pause first
       if (currentTrack?.id === trackId) {
         pause();

@@ -65,7 +65,13 @@ export class UserTrackHistoryService {
         track: type ? { type: type as any } : undefined,
       },
       include: {
-        track: true,
+        track: {
+          include: {
+            artistEntity: true,
+            albumEntity: true,
+            likedByUsers: true,
+          }
+        },
       },
       distinct: ['trackId'],
       orderBy: {
@@ -82,7 +88,15 @@ export class UserTrackHistoryService {
     return await this.prisma.userTrackHistory.findFirst({
       where: { userId },
       orderBy: { listenedAt: 'desc' },
-      include: { track: true },
+      include: { 
+        track: {
+          include: {
+            artistEntity: true,
+            albumEntity: true,
+            likedByUsers: true,
+          }
+        } 
+      },
     });
   }
 }

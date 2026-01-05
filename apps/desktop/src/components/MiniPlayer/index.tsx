@@ -180,7 +180,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onRestore }) => {
             size="small"
             icon={
               currentTrack?.likedByUsers?.find(
-                (n) => n.id === Number(localStorage.getItem("userId"))
+                (n) => n.userId === Number(localStorage.getItem("userId"))
               ) ? (
                 <HeartFilled />
               ) : (
