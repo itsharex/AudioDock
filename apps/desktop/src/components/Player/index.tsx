@@ -1,33 +1,42 @@
 import Icon, {
-    BackwardOutlined, // Added as per instruction
-    DeliveredProcedureOutlined,
-    DownOutlined,
-    FontColorsOutlined,
-    ForwardOutlined,
-    OrderedListOutlined,
-    PauseCircleFilled,
-    PlayCircleFilled,
-    SoundOutlined,
-    StepBackwardOutlined,
-    StepForwardOutlined,
-    TeamOutlined,
+  BackwardOutlined, // Added as per instruction
+  DeliveredProcedureOutlined,
+  DownOutlined,
+  FontColorsOutlined,
+  ForwardOutlined,
+  OrderedListOutlined,
+  PauseCircleFilled,
+  PlayCircleFilled,
+  SoundOutlined,
+  StepBackwardOutlined,
+  StepForwardOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import {
-    Avatar, // Added
-    Button,
-    Drawer,
-    Flex,
-    InputNumber,
-    List, // Rename to avoid conflict if needed, though useMessage is typically context. Context is safer.
-    Modal,
-    notification, // Added
-    Popover,
-    Slider,
-    Space, // Added
-    Tabs,
-    theme,
-    Tooltip,
-    Typography,
+  addToHistory,
+  addTrackToPlaylist,
+  deleteTrack,
+  getDeletionImpact,
+  getLatestHistory,
+  getPlaylists,
+  type Playlist,
+} from "@soundx/services";
+import {
+  Avatar, // Added
+  Button,
+  Drawer,
+  Flex,
+  InputNumber,
+  List, // Rename to avoid conflict if needed, though useMessage is typically context. Context is safer.
+  Modal,
+  notification, // Added
+  Popover,
+  Slider,
+  Space, // Added
+  Tabs,
+  theme,
+  Tooltip,
+  Typography,
 } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -40,14 +49,7 @@ import { useMessage } from "../../context/MessageContext";
 import { useMediaSession } from "../../hooks/useMediaSession";
 import { getBaseURL } from "../../https";
 import { type Device, type Track, TrackType } from "../../models";
-import {
-    addTrackToPlaylist,
-    getPlaylists,
-    type Playlist,
-} from "@soundx/services";
 import { socketService } from "../../services/socket";
-import { deleteTrack, getDeletionImpact } from "@soundx/services";
-import { addToHistory, getLatestHistory } from "@soundx/services"; // Added
 import { useAuthStore } from "../../store/auth";
 import { usePlayerStore } from "../../store/player";
 import { useSettingsStore } from "../../store/settings";
@@ -87,7 +89,9 @@ const Player: React.FC = () => {
   const { mode: appMode } = usePlayMode();
   const { user } = useAuthStore();
   const { updateDesktopLyric } = useSettingsStore();
-  const desktopLyricEnable = useSettingsStore((state) => state.desktopLyric.enable);
+  const desktopLyricEnable = useSettingsStore(
+    (state) => state.desktopLyric.enable
+  );
 
   // Sync store active mode with app mode
   useEffect(() => {
@@ -172,7 +176,7 @@ const Player: React.FC = () => {
         // 获取设备
         const deviceName =
           (await window.ipcRenderer?.getName()) || window.navigator.userAgent;
-        const res = await getLatestHistory();
+        const res = await getLatestHistory(user.id);
         if (res && res.code === 200 && res.data) {
           const history = res.data;
           // 最近 24 小时
@@ -526,7 +530,14 @@ const Player: React.FC = () => {
       (async () => {
         const deviceName =
           (await window.ipcRenderer?.getName()) || window.navigator.userAgent;
-        addToHistory(currentTrack.id, 0, deviceName, device.id, isSynced);
+        addToHistory(
+          currentTrack.id,
+          user?.id || 0,
+          0,
+          deviceName,
+          device.id,
+          isSynced
+        );
       })();
     }
   }, [currentTrack?.id]);
@@ -539,6 +550,7 @@ const Player: React.FC = () => {
           (await window.ipcRenderer?.getName()) || window.navigator.userAgent;
         addToHistory(
           currentTrack.id,
+          user?.id || 0,
           currentTime,
           deviceName,
           device.id,
@@ -561,13 +573,16 @@ const Player: React.FC = () => {
 
       // IPC Broadcast for Mini Player (throttled ~250ms)
       const now = Date.now();
-      if ((window as any).ipcRenderer && now - lastTimeUpdateRef.current > 250) {
-          (window as any).ipcRenderer.send("player:update", {
-             currentTime: time,
-             duration: duration || audioRef.current.duration,
-             isPlaying: !audioRef.current.paused
-          });
-          lastTimeUpdateRef.current = now;
+      if (
+        (window as any).ipcRenderer &&
+        now - lastTimeUpdateRef.current > 250
+      ) {
+        (window as any).ipcRenderer.send("player:update", {
+          currentTime: time,
+          duration: duration || audioRef.current.duration,
+          isPlaying: !audioRef.current.paused,
+        });
+        lastTimeUpdateRef.current = now;
       }
 
       // Handle skip end - ONLY in Audiobook mode
@@ -585,7 +600,7 @@ const Player: React.FC = () => {
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
-      
+
       // Apply playback rate
       audioRef.current.playbackRate = playbackRate;
 
@@ -708,7 +723,9 @@ const Player: React.FC = () => {
   }, [currentTrack, isPlaying]);
 
   // Global Lyric Sync Logic
-  const [parsedLyrics, setParsedLyrics] = useState<{ time: number; text: string }[]>([]);
+  const [parsedLyrics, setParsedLyrics] = useState<
+    { time: number; text: string }[]
+  >([]);
 
   // Parse lyrics when track changes
   useEffect(() => {
@@ -717,7 +734,7 @@ const Player: React.FC = () => {
       setParsedLyrics([]);
       // Sync empty state immediately
       if (window.ipcRenderer) {
-         window.ipcRenderer.send("lyric:update", { currentLyric: "" });
+        window.ipcRenderer.send("lyric:update", { currentLyric: "" });
       }
       return;
     }
@@ -755,13 +772,13 @@ const Player: React.FC = () => {
     else if (index === -1) index = parsedLyrics.length - 1;
 
     const currentLineText = index >= 0 ? parsedLyrics[index].text : "";
-    
-    // Optimize: Only send if needed (though main process handles diffs usually, better to be chatty or let throttling handle it? 
-    // Main process throttling might be better, but let's send for now. 
+
+    // Optimize: Only send if needed (though main process handles diffs usually, better to be chatty or let throttling handle it?
+    // Main process throttling might be better, but let's send for now.
     // Ideally we would check if it changed, but we don't store previous sent lyric here easily without ref.
     // Given the frequency of currentTime updates (throttle in main loop?), this runs every time time updates.
     // Actually handleTimeUpdate updates currentTime state.
-    
+
     window.ipcRenderer.send("lyric:update", {
       currentLyric: currentLineText,
     });
@@ -892,37 +909,36 @@ const Player: React.FC = () => {
     }
   };
 
+  const handleDeleteSubTrack = async (track: Track) => {
+    try {
+      const { data: impact } = await getDeletionImpact(track.id);
 
-    const handleDeleteSubTrack = async (track: Track) => {
-      try {
-        const { data: impact } = await getDeletionImpact(track.id);
-
-        modalApi.confirm({
-          title: "确定删除该音频文件吗?",
-          content: impact?.isLastTrackInAlbum
-            ? `这是专辑《${impact.albumName}》的最后一个音频，删除后该专辑也将被同步删除。`
-            : "删除后将无法恢复，且会同步删除本地原文件。",
-          okText: "删除",
-          okType: "danger",
-          cancelText: "取消",
-          onOk: async () => {
-            try {
-              const res = await deleteTrack(track.id, impact?.isLastTrackInAlbum);
-              if (res.code === 200) {
-                message.success("删除成功");
-                removeTrack(track.id);
-              } else {
-                message.error("删除失败");
-              }
-            } catch (error) {
+      modalApi.confirm({
+        title: "确定删除该音频文件吗?",
+        content: impact?.isLastTrackInAlbum
+          ? `这是专辑《${impact.albumName}》的最后一个音频，删除后该专辑也将被同步删除。`
+          : "删除后将无法恢复，且会同步删除本地原文件。",
+        okText: "删除",
+        okType: "danger",
+        cancelText: "取消",
+        onOk: async () => {
+          try {
+            const res = await deleteTrack(track.id, impact?.isLastTrackInAlbum);
+            if (res.code === 200) {
+              message.success("删除成功");
+              removeTrack(track.id);
+            } else {
               message.error("删除失败");
             }
-          },
-        });
-      } catch (error) {
-        message.error("获取删除影响失败");
-      }
-    };
+          } catch (error) {
+            message.error("删除失败");
+          }
+        },
+      });
+    } catch (error) {
+      message.error("获取删除影响失败");
+    }
+  };
 
   const renderPlayOrderButton = () => (
     <Popover
@@ -1120,7 +1136,11 @@ const Player: React.FC = () => {
                       }
                       title={
                         item.username +
-                        `${item.userId === useAuthStore.getState().user?.id ? "(你)" : ""}`
+                        `${
+                          item.userId === useAuthStore.getState().user?.id
+                            ? "(你)"
+                            : ""
+                        }`
                       }
                       description={item.deviceName}
                     />
@@ -1324,9 +1344,7 @@ const Player: React.FC = () => {
             placement="top"
           >
             <Tooltip title="播放速度">
-              <div className={styles.playbackRateIcon}>
-                {playbackRate}倍
-              </div>
+              <div className={styles.playbackRateIcon}>{playbackRate}倍</div>
             </Tooltip>
           </Popover>
         )}
@@ -1334,7 +1352,9 @@ const Player: React.FC = () => {
         {appMode === TrackType.MUSIC && (
           <Tooltip title="桌面歌词">
             <FontColorsOutlined
-              className={`${styles.settingIcon} ${desktopLyricEnable ? styles.activeIcon : ""}`}
+              className={`${styles.settingIcon} ${
+                desktopLyricEnable ? styles.activeIcon : ""
+              }`}
               onClick={handleDesktopLyricToggle}
             />
           </Tooltip>
