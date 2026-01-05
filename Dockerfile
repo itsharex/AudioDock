@@ -22,6 +22,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/db/package.json ./packages/db/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/ws/package.json ./packages/ws/
+COPY packages/services/package.json ./packages/services/
 COPY services/api/package.json ./services/api/
 COPY apps/desktop/package.json ./apps/desktop/
 
@@ -38,6 +39,8 @@ RUN cd packages/utils && pnpm run build
 RUN cd packages/ws && pnpm run build
 # 构建 @soundx/db
 RUN cd packages/db && pnpm run build
+# 构建 @soundx/services
+RUN cd packages/services && pnpm run build
 # 6. Prisma generate（确保生成到 packages/db/generated/client）
 # 确保在 db 目录下运行 generate
 RUN cd packages/db && pnpm run generate
@@ -58,6 +61,7 @@ ENV NODE_ENV=production
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/db/package.json      ./packages/db/
 COPY packages/utils/package.json   ./packages/utils/
+COPY packages/services/package.json   ./packages/services/
 COPY services/api/package.json     ./services/api/
 
 # 2. 安装生产依赖 + 全局安装 prisma (用于 db push)
@@ -68,6 +72,7 @@ RUN npm i -g pnpm prisma@6.6.0 && pnpm install --prod --frozen-lockfile --ignore
 COPY --from=builder /app/packages/db/dist       ./packages/db/dist
 COPY --from=builder /app/packages/db/prisma     ./packages/db/prisma
 COPY --from=builder /app/packages/utils/dist    ./packages/utils/dist
+COPY --from=builder /app/packages/services/dist    ./packages/services/dist
 COPY --from=builder /app/services/api/dist      ./services/api/dist
 COPY --from=builder /app/apps/desktop/dist      ./apps/desktop/dist
 
