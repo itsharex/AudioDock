@@ -149,8 +149,7 @@ export class TrackController {
   ): Promise<ISuccessResponse<boolean> | IErrorResponse> {
     try {
       const isSuccess = await this.trackService.deleteTrack(
-        parseInt(id),
-        deleteAlbum === 'true',
+        parseInt(id)
       );
       return {
         code: 200,

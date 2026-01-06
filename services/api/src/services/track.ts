@@ -174,7 +174,7 @@ export class TrackService {
     };
   }
 
-  async deleteTrack(id: number, deleteAlbum: boolean = false): Promise<boolean> {
+  async deleteTrack(id: number): Promise<boolean> {
     const track = await this.prisma.track.findUnique({ where: { id } });
     if (track) {
       await this.deleteFileSafely(track.path);
@@ -185,24 +185,27 @@ export class TrackService {
     await this.prisma.userTrackHistory.deleteMany({ where: { trackId: id } });
     await this.prisma.userAudiobookLike.deleteMany({ where: { trackId: id } });
     await this.prisma.userAudiobookHistory.deleteMany({ where: { trackId: id } });
-
     // Handle album deletion if requested and possible
-    if (deleteAlbum && track) {
-      if (track.albumId) {
-        console.log('Deleting album with ID:', track.albumId);
-        await this.prisma.userAlbumLike.deleteMany({ where: { albumId: track.albumId } });
-        await this.prisma.userAlbumHistory.deleteMany({ where: { albumId: track.albumId } });
-        await this.prisma.album.delete({ where: { id: track.albumId } });
-        console.log('Album deleted successfully');
-      } else if (track.album) {
-        // Find album by name and artist if no albumId
-        const album = await this.prisma.album.findFirst({
-          where: { name: track.album, artist: track.artist }
-        });
-        if (album) {
-          await this.prisma.userAlbumLike.deleteMany({ where: { albumId: album.id } });
-          await this.prisma.userAlbumHistory.deleteMany({ where: { albumId: album.id } });
-          await this.prisma.album.delete({ where: { id: album.id } });
+    if (track) {
+      const impact = await this.checkDeletionImpact(id);
+      console.log('Impact:', impact);
+      if (impact.isLastTrackInAlbum) {
+        if (track.albumId) {
+          console.log('Deleting album with ID:', track.albumId);
+          await this.prisma.userAlbumLike.deleteMany({ where: { albumId: track.albumId } });
+          await this.prisma.userAlbumHistory.deleteMany({ where: { albumId: track.albumId } });
+          await this.prisma.album.delete({ where: { id: track.albumId } });
+          console.log('Album deleted successfully：', track.albumId);
+        } else if (track.album) {
+          // Find album by name and artist if no albumId
+          const album = await this.prisma.album.findFirst({
+            where: { name: track.album, artist: track.artist }
+          });
+          if (album) {
+            await this.prisma.userAlbumLike.deleteMany({ where: { albumId: album.id } });
+            await this.prisma.userAlbumHistory.deleteMany({ where: { albumId: album.id } });
+            await this.prisma.album.delete({ where: { id: album.id } });
+          }
         }
       }
     }

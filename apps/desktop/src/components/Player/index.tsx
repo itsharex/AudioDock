@@ -1213,13 +1213,20 @@ const Player: React.FC = () => {
       </div>
       {/* Volume & Settings */}
       <div className={styles.settings}>
-        {currentTrack?.likedByUsers?.find(
-          (n) => n.userId === (user?.id || 0)
-        ) ? (
-          <HeartFilled onClick={() => toggleLike(currentTrack.id, 'unlike')} className={styles.settingIcon} />
-        ) : (
-          <HeartOutlined onClick={() => toggleLike(currentTrack.id, 'like')} className={styles.settingIcon} />
-        )}
+        {appMode !== TrackType.AUDIOBOOK &&
+          (currentTrack?.likedByUsers?.find(
+            (n) => n.userId === (user?.id || 0)
+          ) ? (
+            <HeartFilled
+              onClick={() => toggleLike(currentTrack.id, "unlike")}
+              className={styles.settingIcon}
+            />
+          ) : (
+            <HeartOutlined
+              onClick={() => toggleLike(currentTrack.id, "like")}
+              className={styles.settingIcon}
+            />
+          ))}
         {/* Play Order */}
         {renderPlayOrderButton()}
 
