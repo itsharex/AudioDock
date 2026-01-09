@@ -1,5 +1,5 @@
-import request from "./request";
 import type { ISuccessResponse } from "./models";
+import request from "./request";
 
 export enum TaskStatus {
   INITIALIZING = 'INITIALIZING',
@@ -44,6 +44,14 @@ export const createImportTask = (data: CreateTaskParams) => {
 export const getImportTask = (id: string, serverAddress?: string) => {
   return request.get<any, ISuccessResponse<ImportTask>>(
     `/import/task/${id}`,
+    serverAddress ? { baseURL: serverAddress } : undefined
+  );
+};
+
+// 获取当前正在运行的导入任务
+export const getRunningImportTask = (serverAddress?: string) => {
+  return request.get<any, ISuccessResponse<ImportTask>>(
+    "/import/current-task",
     serverAddress ? { baseURL: serverAddress } : undefined
   );
 };

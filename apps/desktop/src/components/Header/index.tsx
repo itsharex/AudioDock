@@ -14,12 +14,13 @@ import {
   SearchOutlined,
   SettingOutlined,
   SkinOutlined,
-  SunOutlined
+  SunOutlined,
 } from "@ant-design/icons";
 import {
   check,
   createImportTask,
   getImportTask,
+  getRunningImportTask,
   searchAll,
   TaskStatus,
   type ImportTask,
@@ -182,15 +183,13 @@ const Header: React.FC = () => {
 
   // Click outside to close search results
   useEffect(() => {
-
-    check().then(res => {
+    check().then((res) => {
       if (res.code == 200) {
-        
       } else if (res.code === 401) {
         message.error("登录信息已过期，请重新登录");
         logout();
       }
-    })
+    });
     const handleClickOutside = (event: MouseEvent) => {
       if (
         searchContainerRef.current &&
@@ -207,12 +206,30 @@ const Header: React.FC = () => {
   }, []);
 
   // Cleanup timer on unmount
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
       if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      // Check if there's a task running on server
+      getRunningImportTask().then((taskRes) => {
+        if (taskRes.code === 200 && taskRes.data) {
+          const taskId = taskRes.data.id;
+          setImportTask(taskRes.data);
+          setIsImportModalOpen(true);
+
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+          pollTimerRef.current = setInterval(() => {
+            pollTaskStatus(taskId);
+          }, 1000);
+        }
+      });
+    }
+  }, [user]);
 
   return (
     <div className={styles.header}>
@@ -290,10 +307,10 @@ const Header: React.FC = () => {
             className={styles.actionIcon}
             style={actionIconStyle}
             onClick={() => {
-                if ((window as any).ipcRenderer) {
-                   (window as any).ipcRenderer.send("window:set-mini");
-                }
-             }}
+              if ((window as any).ipcRenderer) {
+                (window as any).ipcRenderer.send("window:set-mini");
+              }
+            }}
           />
         </Tooltip>
         <Tooltip title="主题">
@@ -304,8 +321,8 @@ const Header: React.FC = () => {
             themeSetting === "dark"
               ? "切换至亮色模式"
               : themeSetting === "light"
-                ? "切换至跟随系统"
-                : "切换至暗色模式"
+              ? "切换至跟随系统"
+              : "切换至暗色模式"
           }
         >
           <div
@@ -415,36 +432,63 @@ const Header: React.FC = () => {
         title="数据入库进度"
         open={isImportModalOpen}
         onCancel={() => {
-            if (importTask?.status === TaskStatus.SUCCESS || importTask?.status === TaskStatus.FAILED) {
-                setIsImportModalOpen(false);
-            } else {
-                message.info("任务正在后台运行...");
-                setIsImportModalOpen(false);
-            }
+          if (
+            importTask?.status === TaskStatus.SUCCESS ||
+            importTask?.status === TaskStatus.FAILED
+          ) {
+            setIsImportModalOpen(false);
+          } else {
+            message.info("任务正在后台运行...");
+            setIsImportModalOpen(false);
+          }
         }}
         footer={null}
         destroyOnClose
       >
-        <div style={{ padding: '20px 0' }}>
-            <div style={{ marginBottom: 16 }}>
-                状态：{importTask?.status === TaskStatus.INITIALIZING ? '正在初始化...' : 
-                      importTask?.status === TaskStatus.PARSING ? '正在解析媒体文件...' :
-                      importTask?.status === TaskStatus.SUCCESS ? '入库完成' :
-                      importTask?.status === TaskStatus.FAILED ? '入库失败' : '准备中'}
+        <div style={{ padding: "20px 0" }}>
+          <div style={{ marginBottom: 16 }}>
+            状态：
+            {importTask?.status === TaskStatus.INITIALIZING
+              ? "正在初始化..."
+              : importTask?.status === TaskStatus.PARSING
+              ? "正在解析媒体文件..."
+              : importTask?.status === TaskStatus.SUCCESS
+              ? "入库完成"
+              : importTask?.status === TaskStatus.FAILED
+              ? "入库失败"
+              : "准备中"}
+          </div>
+          {importTask?.status === TaskStatus.FAILED && (
+            <div style={{ color: token.colorError, marginBottom: 16 }}>
+              错误：{importTask.message}
             </div>
-            {importTask?.status === TaskStatus.FAILED && (
-                <div style={{ color: token.colorError, marginBottom: 16 }}>
-                    错误：{importTask.message}
-                </div>
-            )}
-            <Progress 
-                percent={importTask?.total ? Math.round((importTask.current || 0) / importTask.total * 100) : 0} 
-                status={importTask?.status === TaskStatus.FAILED ? 'exception' : 
-                        importTask?.status === TaskStatus.SUCCESS ? 'success' : 'active'}
-            />
-            <div style={{ marginTop: 8, textAlign: 'right', color: token.colorTextSecondary }}>
-                共检测到 {importTask?.total || 0} 个音频文件，已经入库 {importTask?.current || 0} 个
-            </div>
+          )}
+          <Progress
+            percent={
+              importTask?.total
+                ? Math.round(
+                    ((importTask.current || 0) / importTask.total) * 100
+                  )
+                : 0
+            }
+            status={
+              importTask?.status === TaskStatus.FAILED
+                ? "exception"
+                : importTask?.status === TaskStatus.SUCCESS
+                ? "success"
+                : "active"
+            }
+          />
+          <div
+            style={{
+              marginTop: 8,
+              textAlign: "right",
+              color: token.colorTextSecondary,
+            }}
+          >
+            共检测到 {importTask?.total || 0} 个音频文件，已经入库{" "}
+            {importTask?.current || 0} 个
+          </div>
         </div>
       </Modal>
     </div>

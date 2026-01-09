@@ -7,6 +7,7 @@ import {
   getFavoriteTracks,
   getImportTask,
   getPlaylists,
+  getRunningImportTask,
   getTrackHistory,
   TaskStatus,
   type ImportTask
@@ -115,6 +116,23 @@ export default function PersonalScreen() {
       }
     }, [user, activeTab, activeSubTab, mode])
   );
+
+  React.useEffect(() => {
+    if (user) {
+        getRunningImportTask().then(res => {
+            if (res.code === 200 && res.data) {
+                const taskId = res.data.id;
+                setImportTask(res.data);
+                setImportModalVisible(true);
+
+                if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+                pollTimerRef.current = setInterval(() => {
+                    pollTaskStatus(taskId);
+                }, 1000);
+            }
+        });
+    }
+  }, [user]);
 
   const loadData = async () => {
     if (!user) return;

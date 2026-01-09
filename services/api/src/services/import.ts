@@ -55,6 +55,13 @@ export class ImportService {
     return this.tasks.get(id);
   }
 
+  @LogMethod()
+  getRunningTask(): ImportTask | undefined {
+    return Array.from(this.tasks.values()).find(
+      task => task.status === TaskStatus.INITIALIZING || task.status === TaskStatus.PARSING
+    );
+  }
+
   private convertToHttpUrl(localPath: string, type: 'cover' | 'audio' | 'music', basePath: string): string {
     // Calculate relative path from base directory to preserve folder structure
     const relativePath = path.relative(basePath, localPath);

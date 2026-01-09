@@ -31,4 +31,14 @@ export class ImportController {
     }
     return { code: 200, message: 'success', data: task };
   }
+
+  @Get('current-task')
+  @LogMethod()
+  async getRunningTask() {
+    const task = await this.importService.getRunningTask();
+    if (!task) {
+      return { code: 404, message: 'No running task found' };
+    }
+    return { code: 200, message: 'success', data: task };
+  }
 }
