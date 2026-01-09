@@ -1,24 +1,29 @@
 import { useFocusEffect } from "@react-navigation/native";
 import {
-    createPlaylist,
-    getAlbumHistory,
-    getFavoriteAlbums,
-    getFavoriteTracks,
-    getPlaylists,
-    getTrackHistory
+  createImportTask,
+  createPlaylist,
+  getAlbumHistory,
+  getFavoriteAlbums,
+  getFavoriteTracks,
+  getImportTask,
+  getPlaylists,
+  getTrackHistory,
+  TaskStatus,
+  type ImportTask
 } from "@soundx/services";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
@@ -97,6 +102,12 @@ export default function PersonalScreen() {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [creating, setCreating] = useState(false);
 
+  // Import task state
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [importModalVisible, setImportModalVisible] = useState(false);
+  const [importTask, setImportTask] = useState<ImportTask | null>(null);
+  const pollTimerRef = React.useRef<any>(null);
+
   useFocusEffect(
     useCallback(() => {
       if (user) {
@@ -159,6 +170,77 @@ export default function PersonalScreen() {
       setCreating(false);
     }
   };
+
+  const handleUpdateLibrary = async (updateMode: "incremental" | "full") => {
+    setMenuVisible(false);
+    
+    const startTask = async () => {
+        try {
+            const res = await createImportTask({ mode: updateMode });
+            if (res.code === 200 && res.data) {
+                const taskId = res.data.id;
+                setImportModalVisible(true);
+                setImportTask({ id: taskId, status: TaskStatus.INITIALIZING });
+
+                if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+                pollTimerRef.current = setInterval(() => {
+                    pollTaskStatus(taskId);
+                }, 1000);
+            } else {
+                Alert.alert("错误", res.message || "任务创建失败");
+            }
+        } catch (error) {
+            console.error("Task creation error:", error);
+            Alert.alert("错误", "创建任务失败，请检查网络或后端服务");
+        }
+    };
+
+    if (updateMode === "full") {
+        Alert.alert(
+            "确认全量更新？",
+            "全量更新将清空所有歌曲、专辑、艺术家、播放列表以及您的播放历史和收藏记录！此操作不可恢复。",
+            [
+                { text: "取消", style: "cancel" },
+                { text: "确认清空并更新", style: "destructive", onPress: startTask }
+            ]
+        );
+    } else {
+        // Incremental confirmation
+        Alert.alert(
+            "确认增量更新？",
+            "增量更新只增加新数据，不删除旧数据",
+            [
+                { text: "取消", style: "cancel" },
+                { text: "确认更新", onPress: startTask }
+            ]
+        );
+    }
+  };
+
+  const pollTaskStatus = async (taskId: string) => {
+    try {
+      const res = await getImportTask(taskId);
+      if (res.code === 200 && res.data) {
+        setImportTask(res.data);
+        const { status, total } = res.data;
+        if (status === TaskStatus.SUCCESS) {
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+          setTimeout(() => setImportModalVisible(false), 2000);
+          loadData(); // Refresh data after successful import
+        } else if (status === TaskStatus.FAILED) {
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+        }
+      }
+    } catch (error) {
+      console.error("Poll error:", error);
+    }
+  };
+
+  React.useEffect(() => {
+      return () => {
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      }
+  }, []);
 
   const renderItem = React.useCallback(({ item }: { item: any }) => {
     const isPlaylist = activeTab === "playlists";
@@ -235,7 +317,7 @@ export default function PersonalScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setCreateModalVisible(true)} style={styles.iconBtn}>
+        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.iconBtn}>
           <Ionicons name="add" size={28} color={colors.text} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push("/settings")} style={styles.iconBtn}>
@@ -386,6 +468,108 @@ export default function PersonalScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </Modal>
+
+      {/* Action Selection Modal (Dropdown replacement) */}
+      <Modal
+        visible={menuVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <TouchableOpacity 
+            style={styles.menuOverlay} 
+            activeOpacity={1} 
+            onPress={() => setMenuVisible(false)}
+        >
+            <View style={[styles.menuContent, { backgroundColor: colors.card, top: insets.top + 50 }]}>
+                <TouchableOpacity 
+                    style={styles.menuItem} 
+                    onPress={() => {
+                        setMenuVisible(false);
+                        setCreateModalVisible(true);
+                    }}
+                >
+                    <Ionicons name="list-outline" size={22} color={colors.text} />
+                    <Text style={[styles.menuItemText, { color: colors.text }]}>新建播放列表</Text>
+                </TouchableOpacity>
+                <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
+                <TouchableOpacity 
+                    style={styles.menuItem} 
+                    onPress={() => handleUpdateLibrary("incremental")}
+                >
+                    <Ionicons name="refresh-outline" size={22} color={colors.text} />
+                    <Text style={[styles.menuItemText, { color: colors.text }]}>增量更新音频文件</Text>
+                </TouchableOpacity>
+                <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
+                <TouchableOpacity 
+                    style={styles.menuItem} 
+                    onPress={() => handleUpdateLibrary("full")}
+                >
+                    <Ionicons name="repeat-outline" size={22} color={colors.text} />
+                    <Text style={[styles.menuItemText, { color: colors.text }]}>全量更新音频文件</Text>
+                </TouchableOpacity>
+            </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Import Progress Modal */}
+      <Modal
+        visible={importModalVisible}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.importModalOverlay}>
+            <View style={[styles.importModalContent, { backgroundColor: colors.card }]}>
+                <Text style={[styles.importModalTitle, { color: colors.text }]}>数据入库进度</Text>
+                
+                <View style={styles.importStatusRow}>
+                    <Text style={{ color: colors.secondary }}>状态：</Text>
+                    <Text style={{ color: colors.text, fontWeight: '500' }}>
+                        {importTask?.status === TaskStatus.INITIALIZING ? '正在初始化...' : 
+                        importTask?.status === TaskStatus.PARSING ? '正在解析媒体文件...' :
+                        importTask?.status === TaskStatus.SUCCESS ? '入库完成' :
+                        importTask?.status === TaskStatus.FAILED ? '入库失败' : '准备中'}
+                    </Text>
+                </View>
+
+                {importTask?.status === TaskStatus.FAILED && (
+                    <Text style={[styles.importErrorText, { color: colors.primary }]}>
+                        错误：{importTask.message}
+                    </Text>
+                )}
+
+                <View style={[styles.progressBarContainer, { backgroundColor: colors.background }]}>
+                    <View style={[
+                        styles.progressBarFill, 
+                        { 
+                            backgroundColor: colors.primary,
+                            width: `${importTask?.total ? Math.round((importTask.current || 0) / importTask.total * 100) : 0}%` 
+                        }
+                    ]} />
+                </View>
+
+                <Text style={[styles.importCounts, { color: colors.secondary }]}>
+                    共检测到 {importTask?.total || 0} 个音频文件，已经入库 {importTask?.current || 0} 个
+                </Text>
+
+                {(importTask?.status === TaskStatus.SUCCESS || importTask?.status === TaskStatus.FAILED) ? (
+                    <TouchableOpacity 
+                        style={[styles.importCloseBtn, { backgroundColor: colors.primary }]}
+                        onPress={() => setImportModalVisible(false)}
+                    >
+                        <Text style={[styles.importCloseBtnText, { color: theme === 'dark' ? '#000' : '#fff' }]}>关闭</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity 
+                        style={styles.importHideBtn}
+                        onPress={() => setImportModalVisible(false)}
+                    >
+                        <Text style={{ color: colors.secondary }}>后台运行</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
         </View>
       </Modal>
     </View>
@@ -585,5 +769,87 @@ const styles = StyleSheet.create({
   createConfirmText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  menuContent: {
+    position: 'absolute',
+    left: 20,
+    borderRadius: 12,
+    paddingVertical: 8,
+    minWidth: 200,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  menuItemText: {
+    fontSize: 16,
+  },
+  menuDivider: {
+    height: 0.5,
+    marginHorizontal: 16,
+  },
+  importModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  importModalContent: {
+    width: "85%",
+    borderRadius: 20,
+    padding: 24,
+  },
+  importModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  importStatusRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  importErrorText: {
+    marginBottom: 16,
+    fontSize: 14,
+  },
+  progressBarContainer: {
+    height: 10,
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  progressBarFill: {
+    height: '100%',
+  },
+  importCounts: {
+    textAlign: 'center',
+    fontSize: 12,
+    marginBottom: 24,
+  },
+  importCloseBtn: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  importCloseBtnText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  importHideBtn: {
+    paddingVertical: 12,
+    alignItems: 'center',
   },
 });
