@@ -9,15 +9,15 @@ import { getAlbumHistory, getFavoriteAlbums, getFavoriteTracks, getTrackHistory 
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getBaseURL } from "../https";
@@ -98,7 +98,7 @@ export const PlaylistModal = () => {
 
   const renderItem = ({ item, index }: { item: any; index: number }) => {
     const isCurrent = activeTab === "current";
-    const isAlbum = activeSubTab === "album" || mode === "AUDIOBOOK";
+    const isAlbum = !isCurrent && (activeSubTab === "album" || mode === "AUDIOBOOK");
     const isHistoryOrFav = activeTab !== "current";
 
     // Item could be Track or Album
@@ -126,9 +126,13 @@ export const PlaylistModal = () => {
         }}
       >
         <View style={styles.itemRow}>
-          <View>
+          <View style={[!isAlbum && { width: isAlbum ? 50 : 20, alignItems: "center" }]}>
             <Image
-              style={{ width: 50, height: 50, borderRadius: 4 }}
+              style={{
+                width: isAlbum ? 50 : 20,
+                height: isAlbum ? 50 : 20,
+                borderRadius: isAlbum ? 4 : 2,
+              }}
               source={{
                 uri: item.cover
                   ? typeof item.cover === "string" &&

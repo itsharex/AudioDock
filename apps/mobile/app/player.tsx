@@ -1,3 +1,5 @@
+import MarqueeText from "@/src/components/MarqueeText";
+import PlayingIndicator from "@/src/components/PlayingIndicator";
 import { useAuth } from "@/src/context/AuthContext";
 import { PlayMode, usePlayer } from "@/src/context/PlayerContext";
 import { useTheme } from "@/src/context/ThemeContext";
@@ -97,11 +99,52 @@ export default function PlayerScreen() {
   const [liked, setLiked] = useState(false);
   const { user } = useAuth();
 
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const hideTimerRef = useRef<any>(null);
+  const [artworkHeight, setArtworkHeight] = useState(0);
+  const [controlsHeight, setControlsHeight] = useState(0);
+  const controlsOpacity = useRef(new Animated.Value(1)).current;
+
+  const resetHideTimer = () => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+    }
+    setControlsVisible(true);
+    hideTimerRef.current = setTimeout(() => {
+      if (isLandscape && needsAutoHide) {
+        setControlsVisible(false);
+      }
+    }, 3000);
+  };
+
+  const needsAutoHide =
+    isLandscape &&
+    artworkHeight > 0 &&
+    controlsHeight > 0 &&
+    artworkHeight + controlsHeight + 60 > height; // 60 is estimated padding/gaps
+
+  useEffect(() => {
+    if (isLandscape && needsAutoHide && controlsVisible) {
+      resetHideTimer();
+    } else if (!isLandscape || !needsAutoHide) {
+      setControlsVisible(true);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    }
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, [isLandscape, needsAutoHide, controlsVisible]);
+
+  useEffect(() => {
+    Animated.timing(controlsOpacity, {
+      toValue: controlsVisible ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [controlsVisible]);
+
   useEffect(() => {
     if (currentTrack && user) {
-      // Check if track is liked.
-      // Depending on data source, currentTrack might have likedByUsers populated.
-      // Casting to any to access potential extra properties or matching Track model
       const trackData = currentTrack as unknown as Track;
       const isLiked = trackData.likedByUsers?.some(
         (like: UserTrackLike) => like.userId === user.id
@@ -137,7 +180,7 @@ export default function PlayerScreen() {
   const handleToggleLike = async () => {
     if (!currentTrack || !user) return;
     const previousLiked = liked;
-    setLiked(!liked); // Optimistic update
+    setLiked(!liked);
 
     try {
       if (previousLiked) {
@@ -147,14 +190,11 @@ export default function PlayerScreen() {
       }
     } catch (error) {
       console.error("Failed to toggle like", error);
-      setLiked(previousLiked); // Revert on error
+      setLiked(previousLiked);
     }
   };
 
-  // Auto-scroll to current lyric
   useEffect(() => {
-    // In landscape mode, lyrics are always shown if not an audiobook.
-    // In portrait mode, we check showLyrics.
     const shouldShowLyrics =
       isLandscape ? currentTrack?.type !== TrackType.AUDIOBOOK : showLyrics;
 
@@ -170,11 +210,7 @@ export default function PlayerScreen() {
 
     if (activeIndex !== -1 && activeIndex !== currentLyricIndex) {
       setCurrentLyricIndex(activeIndex);
-
-      // Scroll to center the active lyric
-      // Each lyric line is approximately 40px (16px font + 8px margin top + 8px margin bottom + 8px line spacing)
       const lineHeight = 40;
-      // Use appropriate container height based on orientation
       const containerHeight = isLandscape ? height * 0.8 : width * 0.7;
       const scrollToY =
         activeIndex * lineHeight - containerHeight / 2 + lineHeight / 2;
@@ -195,7 +231,6 @@ export default function PlayerScreen() {
     height,
   ]);
 
-  // Format time (mm:ss)
   const formatTime = (seconds: number) => {
     if (!seconds) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -211,59 +246,6 @@ export default function PlayerScreen() {
     }
   };
 
-  const getModeIcon = (mode: PlayMode) => {
-    switch (mode) {
-      case PlayMode.SEQUENCE:
-        return "arrow-forward"; // Or infinite/repeat-outline if fitting
-      case PlayMode.LOOP_LIST:
-        return "repeat";
-      case PlayMode.SHUFFLE:
-        return "shuffle";
-      case PlayMode.LOOP_SINGLE:
-        return "repeat-1"; // Assuming Expo Icons has this, usually "repeat-once" or similar. Ionicons has "repeat" and needs overlay. Or "repeat" with badge.
-        // Ionicons: repeat, shuffle.
-        // Let's check available icons or use text/custom if needed.
-        // Ionicons v5 usually has: repeat, shuffle, arrow-forward.
-        // "repeat-1" might not exist in Ionicons set directly or named differently.
-        // Using "repeat" for sequence? No.
-        // Let's assume standard Ionicons for now.
-        // If "repeat-1" is missing, I might just use "repeat" and color, or "refresh-circle".
-        // Actually, Ionicons has `repeat` and `shuffle`.
-        // MaterialIcons has `repeat-one`.
-        // Let's stick to safe ones or check.
-        // Assuming "repeat" is Loop List.
-        // "shuffle" is Shuffle.
-        // "arrow-forward" for Sequence.
-        // "stop-circle" or similar for Single Once?
-        // Let's try to map:
-        // SEQUENCE: "arrow-forward-circle-outline"
-        // LOOP_LIST: "repeat"
-        // SHUFFLE: "shuffle"
-        // LOOP_SINGLE: "infinite" (wrong). modifying later if needed.
-        // Actually, for Loop Single, let's try "reload" or "sync" if "repeat-1" fails.
-        // I will use "repeat" for both loops but maybe different color? No, must be distinct.
-        // Let's checks Ionicons map.
-        // "repeat" is loop.
-        // Let's use "musical-notes" for one?
-        // I will use `repeat` for list loop.
-        // I will use `shuffle` for shuffle.
-        // I will use `arrow-forward` for sequence.
-        // I will use `disc` for single loop?
-        // For now I will put placeholder logic and if user complains I fix.
-        // WAIT, I can check valid icons.
-        // I'll stick to: 'repeat', 'shuffle', 'arrow-forward'
-        // For single loop: 'repeat' (maybe add a small '1' badge overlay if I could, but here just icon string).
-        // Let's use 'refresh' for Single Loop?
-        // Let's use basic ones.
-        return "arrow-forward-outline";
-      case PlayMode.SINGLE_ONCE:
-        return "pause-circle-outline";
-      default:
-        return "repeat";
-    }
-  };
-
-  // Re-write getModeIcon to be simpler string map in render for now, or just:
   const getModeIconName = (mode: PlayMode): any => {
     switch (mode) {
       case PlayMode.SEQUENCE:
@@ -273,7 +255,7 @@ export default function PlayerScreen() {
       case PlayMode.SHUFFLE:
         return "shuffle";
       case PlayMode.LOOP_SINGLE:
-        return "sync"; // Fallback
+        return "sync";
       case PlayMode.SINGLE_ONCE:
         return "stop-circle-outline";
       default:
@@ -314,7 +296,36 @@ export default function PlayerScreen() {
           ]}
           onPress={() => playTrackList(trackList, index)}
         >
-          <View style={{ flex: 1 }}>
+          <View style={styles.trackIndexContainer}>
+            {currentTrack?.id === item.id && isPlaying ? (
+              <PlayingIndicator />
+            ) : (
+              <Text
+                style={[
+                  styles.trackIndex,
+                  {
+                    color:
+                      currentTrack?.id === item.id
+                        ? colors.primary
+                        : colors.secondary,
+                  },
+                ]}
+              >
+                {index + 1}
+              </Text>
+            )}
+          </View>
+          <Image
+            source={{
+              uri: item.cover
+                ? typeof item.cover === "string" && item.cover.startsWith("http")
+                  ? item.cover
+                  : `${getBaseURL()}${item.cover}`
+                : `https://picsum.photos/seed/${item.id}/20/20`,
+            }}
+            style={styles.playlistItemCover}
+          />
+          <View style={{ flex: 1, marginLeft: 10 }}>
             <Text
               style={[
                 styles.playlistItemText,
@@ -327,11 +338,18 @@ export default function PlayerScreen() {
             >
               {item.name}
             </Text>
-            {currentTrack?.type === TrackType.AUDIOBOOK && (item as any).progress > 0 && (
-                 <Text style={{ fontSize: 10, color: colors.secondary, marginTop: 2 }}>
-                    已听 {Math.floor(((item as any).progress / (item.duration || 1)) * 100)}%
-                 </Text>
-            )}
+            {currentTrack?.type === TrackType.AUDIOBOOK &&
+              (item as any).progress > 0 && (
+                <Text
+                  style={{ fontSize: 10, color: colors.secondary, marginTop: 2 }}
+                >
+                  已听{" "}
+                  {Math.floor(
+                    (((item as any).progress || 0) / (item.duration || 1)) * 100
+                  )}
+                  %
+                </Text>
+              )}
           </View>
         </TouchableOpacity>
       )}
@@ -343,17 +361,23 @@ export default function PlayerScreen() {
     <View>
       <View style={styles.infoContainer}>
         <View style={styles.textContainer}>
-          <Text style={[styles.trackTitle, { color: colors.text }]}>
-            {currentTrack.name}
-          </Text>
+          <MarqueeText
+            text={currentTrack.name}
+            style={[styles.trackTitle, { color: colors.text }]}
+          />
           <Text style={[styles.trackArtist, { color: colors.secondary }]}>
             {currentTrack.artist}
           </Text>
         </View>
         <TouchableOpacity
-          onPress={
-            isSynced ? handleDisconnect : () => setSyncModalVisible(true)
-          }
+          onPress={() => {
+            if (isSynced) {
+              handleDisconnect();
+            } else {
+              setSyncModalVisible(true);
+            }
+            resetHideTimer();
+          }}
           style={[styles.syncButton, isSynced && styles.syncButtonActive]}
         >
           <Ionicons
@@ -377,7 +401,10 @@ export default function PlayerScreen() {
         <PlaylistModal />
         {currentTrack.type !== TrackType.AUDIOBOOK && (
           <TouchableOpacity
-            onPress={handleToggleLike}
+            onPress={() => {
+              handleToggleLike();
+              resetHideTimer();
+            }}
             style={styles.likeButton}
           >
             <Ionicons
@@ -388,7 +415,10 @@ export default function PlayerScreen() {
           </TouchableOpacity>
         )}
         <TouchableOpacity
-          onPress={() => setMoreModalVisible(true)}
+          onPress={() => {
+            setMoreModalVisible(true);
+            resetHideTimer();
+          }}
           style={styles.likeButton}
         >
           <Ionicons
@@ -408,9 +438,10 @@ export default function PlayerScreen() {
           minimumValue={0}
           maximumValue={duration}
           value={position}
-          onSlidingComplete={(value) =>
-            seekTo(Array.isArray(value) ? value[0] : value)
-          }
+          onSlidingComplete={(value) => {
+            seekTo(Array.isArray(value) ? value[0] : value);
+            resetHideTimer();
+          }}
           minimumTrackTintColor={colors.primary}
           maximumTrackTintColor={colors.border}
           thumbTintColor={colors.primary}
@@ -434,7 +465,12 @@ export default function PlayerScreen() {
       </View>
 
       <View style={styles.controls}>
-        <TouchableOpacity onPress={togglePlayMode}>
+        <TouchableOpacity
+          onPress={() => {
+            togglePlayMode();
+            resetHideTimer();
+          }}
+        >
           <Ionicons
             name={getModeIconName(playMode)}
             size={24}
@@ -443,12 +479,20 @@ export default function PlayerScreen() {
         </TouchableOpacity>
 
         <View style={styles.mainControls}>
-          <TouchableOpacity onPress={playPrevious}>
+          <TouchableOpacity
+            onPress={() => {
+              playPrevious();
+              resetHideTimer();
+            }}
+          >
             <Ionicons name="play-skip-back" size={35} color={colors.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={togglePlayback}
+            onPress={() => {
+              togglePlayback();
+              resetHideTimer();
+            }}
             style={[styles.playButton, { backgroundColor: colors.text }]}
           >
             <Ionicons
@@ -459,12 +503,22 @@ export default function PlayerScreen() {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={playNext}>
+          <TouchableOpacity
+            onPress={() => {
+              playNext();
+              resetHideTimer();
+            }}
+          >
             <Ionicons name="play-skip-forward" size={35} color={colors.text} />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => setShowPlaylist(true)}>
+        <TouchableOpacity
+          onPress={() => {
+            setShowPlaylist(true);
+            resetHideTimer();
+          }}
+        >
           <Ionicons name="list" size={24} color={colors.secondary} />
         </TouchableOpacity>
       </View>
@@ -484,7 +538,6 @@ export default function PlayerScreen() {
         ]}
       >
         <View style={styles.landscapeContainer}>
-          {/* Left Side - Artwork */}
           <View style={styles.landscapeLeft}>
             <View style={styles.landscapeBackBtn}>
               <TouchableOpacity
@@ -494,7 +547,16 @@ export default function PlayerScreen() {
                 <Ionicons name="chevron-down" size={30} color={colors.text} />
               </TouchableOpacity>
             </View>
-            <View style={styles.landscapeArtworkContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                if (needsAutoHide) {
+                  setControlsVisible(!controlsVisible);
+                }
+              }}
+              activeOpacity={1}
+              style={[styles.landscapeArtworkContainer, { flex: 1 }]}
+              onLayout={(e) => setArtworkHeight(e.nativeEvent.layout.height)}
+            >
               <Image
                 source={{
                   uri: currentTrack.cover
@@ -504,13 +566,30 @@ export default function PlayerScreen() {
                       : `${getBaseURL()}${currentTrack.cover}`
                     : "https://picsum.photos/400",
                 }}
-                style={styles.artwork}
+                style={[styles.artwork, { marginBottom: 0 }]}
               />
-            </View>
-            <View style={styles.landscapeControls}>{renderControls()}</View>
+            </TouchableOpacity>
+            <Animated.View
+              style={[
+                styles.landscapeControls,
+                {
+                  opacity: controlsOpacity,
+                  backgroundColor: colors.background,
+                  borderRadius: 16,
+                  padding: 10,
+                  position: "absolute",
+                  bottom: 20,
+                  left: "10%",
+                  zIndex: 20,
+                },
+              ]}
+              onLayout={(e) => setControlsHeight(e.nativeEvent.layout.height)}
+              pointerEvents={controlsVisible ? "auto" : "none"}
+            >
+              {renderControls()}
+            </Animated.View>
           </View>
 
-          {/* Right Side - Content */}
           <View style={styles.landscapeRight}>
             <View style={styles.landscapeContent}>
               {currentTrack.type === TrackType.AUDIOBOOK ? (
@@ -567,7 +646,6 @@ export default function PlayerScreen() {
         { backgroundColor: colors.background, paddingTop: insets.top },
       ]}
     >
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -584,7 +662,6 @@ export default function PlayerScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
       <View style={styles.content}>
         <View style={{ flex: 1, width: "100%", justifyContent: "center" }}>
           <View
@@ -779,6 +856,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "left",
     marginBottom: 5,
+    height: 28, // Fix height for marquee layout stability
   },
   trackArtist: {
     fontSize: 14,
@@ -797,7 +875,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 50,
+    marginBottom: 30,
   },
   mainControls: {
     flexDirection: "row",
@@ -844,7 +922,6 @@ const styles = StyleSheet.create({
   likeButton: {
     padding: 0,
   },
-
   playButton: {
     width: 50,
     height: 50,
@@ -871,6 +948,8 @@ const styles = StyleSheet.create({
   landscapeRight: {
     flex: 1,
     padding: 24,
+    paddingTop: 34,
+    paddingBottom: 14,
     justifyContent: "center",
   },
   landscapeArtwork: {
@@ -894,6 +973,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   playlistItem: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.1)",
@@ -903,6 +984,20 @@ const styles = StyleSheet.create({
   },
   playlistItemText: {
     fontSize: 16,
+  },
+  trackIndexContainer: {
+    width: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  trackIndex: {
+    fontSize: 14,
+    textAlign: "center",
+  },
+  playlistItemCover: {
+    width: 20,
+    height: 20,
+    borderRadius: 2,
   },
   modal: {
     margin: 0,
@@ -936,7 +1031,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   landscapeControls: {
-    width: "80%",
+    width: "100%",
     justifyContent: "center",
   },
 });
