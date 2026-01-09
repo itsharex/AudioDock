@@ -108,8 +108,7 @@ export class ArtistService {
     type?: TrackType,
     limit: number = 10
   ): Promise<Artist[]> {
-
-    return await this.prisma.artist.findMany({
+    const candidates = await this.prisma.artist.findMany({
       where: {
         AND: [
           type ? { type } : {},
@@ -120,9 +119,29 @@ export class ArtistService {
           },
         ],
       },
-      take: limit,
-      orderBy: { id: 'desc' },
+      take: 100,
     });
+
+    const normalizedKeyword = keyword.toLowerCase();
+
+    return candidates
+      .sort((a, b) => {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+
+        const getScore = (name: string) => {
+          if (name === normalizedKeyword) return 100;
+          if (name.startsWith(normalizedKeyword)) return 80;
+          return 60;
+        };
+
+        const scoreA = getScore(nameA);
+        const scoreB = getScore(nameB);
+
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.name.length - b.name.length;
+      })
+      .slice(0, limit);
   }
 
   // 获取最近的艺术家

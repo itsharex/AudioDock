@@ -1,22 +1,30 @@
 import { Ionicons } from "@expo/vector-icons";
+import {
+    addSearchRecord,
+    clearSearchHistory,
+    getHotSearches,
+    getSearchHistory,
+    searchAlbums,
+    searchArtists,
+    searchTracks
+} from "@soundx/services";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePlayer } from "../src/context/PlayerContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { getBaseURL } from "../src/https";
 import { Album, Artist, Track } from "../src/models";
-import { searchAlbums, searchArtists, searchTracks } from "@soundx/services";
 import { usePlayMode } from "../src/utils/playMode";
 
 export default function SearchScreen() {
@@ -37,7 +45,38 @@ export default function SearchScreen() {
     artists: [],
     albums: [],
   });
+  const [history, setHistory] = useState<string[]>([]);
+  const [hotSearches, setHotSearches] = useState<{ keyword: string; count: number }[]>([]);
+  useEffect(() => {
+    fetchSearchMeta();
+  }, []);
 
+  const fetchSearchMeta = async () => {
+    try {
+      const [hRes, hotRes] = await Promise.all([
+        getSearchHistory(),
+        getHotSearches()
+      ]);
+      if (hRes.code === 200) setHistory(hRes.data);
+      if (hotRes.code === 200) setHotSearches(hotRes.data);
+    } catch (e) {
+      console.error("Failed to fetch search meta:", e);
+    }
+  };
+
+  const clearHistory = async () => {
+    try {
+      await clearSearchHistory();
+      setHistory([]);
+    } catch (e) {
+      console.error("Failed to clear history:", e);
+    }
+  };
+
+  const handleSelectKeyword = (kw: string) => {
+    setKeyword(kw);
+    // handleSearch will be triggered by useEffect
+  };
   useEffect(() => {
     if (keyword.trim().length > 0) {
       const timer = setTimeout(() => {
@@ -63,6 +102,9 @@ export default function SearchScreen() {
         artists: artistsRes.code === 200 ? artistsRes.data : [],
         albums: albumsRes.code === 200 ? albumsRes.data : [],
       });
+
+      // Record search
+      addSearchRecord(keyword);
     } catch (error) {
       console.error("Search failed:", error);
     } finally {
@@ -147,10 +189,55 @@ export default function SearchScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : keyword.trim().length === 0 ? (
-        <View style={styles.center}>
-          <Ionicons name="search-outline" size={64} color={colors.border} />
-          <Text style={{ color: colors.secondary, marginTop: 10 }}>开始搜索你喜欢的音乐</Text>
-        </View>
+        <FlatList
+          data={[
+            ...(history.length > 0 ? [{ type: 'history', data: history }] : []),
+            ...(hotSearches.length > 0 ? [{ type: 'hot', data: hotSearches }] : []),
+          ]}
+          keyExtractor={(item) => item.type}
+          renderItem={({ item }) => (
+            <View style={styles.suggestSection}>
+              <View style={styles.suggestHeader}>
+                <Text style={[styles.suggestTitle, { color: colors.text }]}>
+                  {item.type === 'history' ? '搜索历史' : '热搜榜'}
+                </Text>
+                {item.type === 'history' && (
+                  <TouchableOpacity onPress={clearHistory}>
+                    <Text style={{ color: colors.secondary, fontSize: 13 }}>清空</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              {item.type === 'history' ? (
+                <View style={styles.tagGroup}>
+                  {(item.data as string[]).map((kw: string, i: number) => (
+                    <TouchableOpacity 
+                      key={i} 
+                      style={[styles.tag, { backgroundColor: colors.card }]}
+                      onPress={() => handleSelectKeyword(kw)}
+                    >
+                      <Text style={{ color: colors.text }}>{kw}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.hotList}>
+                  {(item.data as any[]).map((hot: any, i: number) => (
+                    <TouchableOpacity 
+                      key={i} 
+                      style={styles.hotItem}
+                      onPress={() => handleSelectKeyword(hot.keyword)}
+                    >
+                      <Text style={[styles.rank, i < 3 && { color: colors.primary }]}>{i + 1}</Text>
+                      <Text style={[styles.hotKeyword, { color: colors.text }]}>{hot.keyword}</Text>
+                      {i < 3 && <View style={[styles.hotTag, { backgroundColor: colors.primary }]}><Text style={styles.hotTagText}>HOT</Text></View>}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
       ) : sections.length === 0 ? (
         <View style={styles.center}>
           <Text style={{ color: colors.secondary }}>未找到相关结果</Text>
@@ -244,4 +331,60 @@ const styles = StyleSheet.create({
   itemSubtitle: {
     fontSize: 13,
   },
+  suggestSection: {
+    paddingTop: 10,
+    marginBottom: 20,
+  },
+  suggestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  suggestTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  tagGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  tag: {
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  hotList: {
+    paddingHorizontal: 20,
+  },
+  hotItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 15,
+  },
+  rank: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    width: 20,
+    textAlign: 'center',
+    color: '#999',
+  },
+  hotKeyword: {
+    fontSize: 15,
+    flex: 1,
+  },
+  hotTag: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  hotTagText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  }
 });

@@ -17,10 +17,14 @@ import {
   SunOutlined,
 } from "@ant-design/icons";
 import {
+  addSearchRecord,
   check,
+  clearSearchHistory,
   createImportTask,
+  getHotSearches,
   getImportTask,
   getRunningImportTask,
+  getSearchHistory,
   searchAll,
   TaskStatus,
   type ImportTask,
@@ -55,6 +59,8 @@ const Header: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const searchTimerRef = useRef<number | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [hotSearches, setHotSearches] = useState<{ keyword: string; count: number }[]>([]);
 
   // Mode state: 'music' | 'audiobook'
   const { mode: playMode, setMode: setPlayMode } = usePlayMode();
@@ -63,6 +69,46 @@ const Header: React.FC = () => {
   // Import task state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importTask, setImportTask] = useState<ImportTask | null>(null);
+
+  const fetchSearchMeta = async () => {
+    try {
+      const [historyRes, hotRes] = await Promise.all([
+        getSearchHistory(),
+        getHotSearches()
+      ]);
+      if (historyRes.code === 200) setSearchHistory(historyRes.data);
+      if (hotRes.code === 200) setHotSearches(hotRes.data);
+    } catch (e) {
+      console.error("Failed to fetch search meta", e);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    try {
+      await clearSearchHistory();
+      setSearchHistory([]);
+    } catch (e) {
+      message.error("清空历史失败");
+    }
+  };
+
+  const handleSelectKeyword = (keyword: string) => {
+    setSearchKeyword(keyword);
+    performSearch(keyword);
+  };
+
+  const performSearch = async (value: string) => {
+    try {
+      const type = playMode;
+      const results = await searchAll(value.trim(), type);
+      setSearchResults(results);
+      setShowResults(true);
+      // Save record
+      addSearchRecord(value.trim());
+    } catch (error) {
+      console.error("Search error:", error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -156,24 +202,8 @@ const Header: React.FC = () => {
     const value = e.target.value;
     setSearchKeyword(value);
 
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current);
-    }
-
-    if (value.trim()) {
-      searchTimerRef.current = setTimeout(async () => {
-        try {
-          const type = playMode;
-          const results = await searchAll(value.trim(), type);
-          setSearchResults(results);
-          setShowResults(true);
-        } catch (error) {
-          console.error("Search error:", error);
-        }
-      }, 300);
-    } else {
+    if (!value.trim()) {
       setSearchResults(null);
-      setShowResults(false);
     }
   };
 
@@ -272,14 +302,25 @@ const Header: React.FC = () => {
           style={{ color: token.colorText }}
           value={searchKeyword}
           onChange={handleSearchChange}
-          onFocus={() => {
-            if (searchResults) {
-              setShowResults(true);
+          onPressEnter={() => {
+            if (searchKeyword.trim()) {
+              performSearch(searchKeyword.trim());
             }
           }}
+          onFocus={() => {
+            setShowResults(true);
+            fetchSearchMeta();
+          }}
         />
-        {showResults && searchResults && (
-          <SearchResults results={searchResults} onClose={handleCloseSearch} />
+        {showResults && (
+          <SearchResults 
+            results={searchResults} 
+            onClose={handleCloseSearch}
+            history={searchHistory}
+            hotSearches={hotSearches}
+            onSelectKeyword={handleSelectKeyword}
+            onClearHistory={handleClearHistory}
+          />
         )}
       </div>
 

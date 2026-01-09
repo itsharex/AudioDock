@@ -176,6 +176,16 @@ model User {
   playlists        Playlist[]
   /// 用户设备列表
   devices          Device[]
+  /// 用户搜索记录
+  searchRecords    SearchRecord[]
+}
+
+model SearchRecord {
+  id        Int      @id @default(autoincrement())
+  keyword   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
 }
 
 model Device {

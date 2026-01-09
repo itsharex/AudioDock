@@ -1,19 +1,32 @@
-import { Avatar, Empty } from "antd";
+import type { SearchResults as SearchResultsType } from "@soundx/services";
+import { Avatar, Empty, theme } from "antd";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getBaseURL } from "../../https";
-import type { SearchResults as SearchResultsType } from "@soundx/services";
 import { usePlayerStore } from "../../store/player";
 import styles from "./index.module.less";
 
 interface SearchResultsProps {
-  results: SearchResultsType;
+  results: SearchResultsType | null;
   onClose: () => void;
+  history?: string[];
+  hotSearches?: { keyword: string; count: number }[];
+  onSelectKeyword?: (keyword: string) => void;
+  onClearHistory?: () => void;
 }
 
-const SearchResults: React.FC<SearchResultsProps> = ({ results, onClose }) => {
+const SearchResults: React.FC<SearchResultsProps> = ({
+  results,
+  onClose,
+  history = [],
+  hotSearches = [],
+  onSelectKeyword,
+  onClearHistory,
+}) => {
   const navigate = useNavigate();
   const { play, setPlaylist } = usePlayerStore();
+
+  const { token } = theme.useToken();
 
   const handleTrackClick = (track: any) => {
     play(track);
@@ -32,16 +45,74 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onClose }) => {
   };
 
   const hasResults =
-    results.tracks.length > 0 ||
-    results.artists.length > 0 ||
-    results.albums.length > 0;
+    results &&
+    (results.tracks.length > 0 ||
+      results.artists.length > 0 ||
+      results.albums.length > 0);
 
   if (!hasResults) {
     return (
       <div className={styles.searchResults}>
-        <div className={styles.empty}>
-          <Empty description="暂无搜索结果" />
-        </div>
+        {history.length > 0 && (
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>历史搜索</div>
+              <div className={styles.clearBtn} onClick={onClearHistory}>
+                清空
+              </div>
+            </div>
+            <div className={styles.tagGroup}>
+              {history.map((kw, i) => (
+                <div
+                  key={i}
+                  className={styles.tag}
+                  onClick={() => onSelectKeyword?.(kw)}
+                >
+                  {kw}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hotSearches.length > 0 && (
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>热搜榜</div>
+            <div className={styles.hotList}>
+              {hotSearches.map((item, i) => (
+                <div
+                  key={i}
+                  className={styles.hotItem}
+                  onClick={() => onSelectKeyword?.(item.keyword)}
+                >
+                  <span
+                    className={`${styles.rank} ${i < 3 ? styles.topRank : ""}`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className={styles.hotKeyword}>{item.keyword}</span>
+                  {i < 3 && (
+                    <span
+                      className={styles.hotTag}
+                      style={{
+                        color: token.colorBgBase,
+                        backgroundColor: token.colorPrimary,
+                      }}
+                    >
+                      HOT
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!history.length && !hotSearches.length && (
+          <div className={styles.empty}>
+            <Empty description="暂无搜索结果" />
+          </div>
+        )}
       </div>
     );
   }

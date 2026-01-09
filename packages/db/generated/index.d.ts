@@ -64,6 +64,11 @@ export type UserAudiobookHistory = $Result.DefaultSelection<Prisma.$UserAudioboo
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model SearchRecord
+ * 
+ */
+export type SearchRecord = $Result.DefaultSelection<Prisma.$SearchRecordPayload>
+/**
  * Model Device
  * 
  */
@@ -320,6 +325,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.searchRecord`: Exposes CRUD operations for the **SearchRecord** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SearchRecords
+    * const searchRecords = await prisma.searchRecord.findMany()
+    * ```
+    */
+  get searchRecord(): Prisma.SearchRecordDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.device`: Exposes CRUD operations for the **Device** model.
@@ -800,6 +815,7 @@ export namespace Prisma {
     UserAudiobookLike: 'UserAudiobookLike',
     UserAudiobookHistory: 'UserAudiobookHistory',
     User: 'User',
+    SearchRecord: 'SearchRecord',
     Device: 'Device',
     Playlist: 'Playlist',
     Folder: 'Folder'
@@ -821,7 +837,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "track" | "album" | "artist" | "userTrackLike" | "userTrackHistory" | "userAlbumLike" | "userAlbumHistory" | "userAudiobookLike" | "userAudiobookHistory" | "user" | "device" | "playlist" | "folder"
+      modelProps: "track" | "album" | "artist" | "userTrackLike" | "userTrackHistory" | "userAlbumLike" | "userAlbumHistory" | "userAudiobookLike" | "userAudiobookHistory" | "user" | "searchRecord" | "device" | "playlist" | "folder"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1565,6 +1581,80 @@ export namespace Prisma {
           }
         }
       }
+      SearchRecord: {
+        payload: Prisma.$SearchRecordPayload<ExtArgs>
+        fields: Prisma.SearchRecordFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SearchRecordFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SearchRecordFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>
+          }
+          findFirst: {
+            args: Prisma.SearchRecordFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SearchRecordFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>
+          }
+          findMany: {
+            args: Prisma.SearchRecordFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>[]
+          }
+          create: {
+            args: Prisma.SearchRecordCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>
+          }
+          createMany: {
+            args: Prisma.SearchRecordCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SearchRecordCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>[]
+          }
+          delete: {
+            args: Prisma.SearchRecordDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>
+          }
+          update: {
+            args: Prisma.SearchRecordUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>
+          }
+          deleteMany: {
+            args: Prisma.SearchRecordDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SearchRecordUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SearchRecordUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>[]
+          }
+          upsert: {
+            args: Prisma.SearchRecordUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SearchRecordPayload>
+          }
+          aggregate: {
+            args: Prisma.SearchRecordAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSearchRecord>
+          }
+          groupBy: {
+            args: Prisma.SearchRecordGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SearchRecordGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SearchRecordCountArgs<ExtArgs>
+            result: $Utils.Optional<SearchRecordCountAggregateOutputType> | number
+          }
+        }
+      }
       Device: {
         payload: Prisma.$DevicePayload<ExtArgs>
         fields: Prisma.DeviceFieldRefs
@@ -1881,6 +1971,7 @@ export namespace Prisma {
     userAudiobookLike?: UserAudiobookLikeOmit
     userAudiobookHistory?: UserAudiobookHistoryOmit
     user?: UserOmit
+    searchRecord?: SearchRecordOmit
     device?: DeviceOmit
     playlist?: PlaylistOmit
     folder?: FolderOmit
@@ -2133,6 +2224,7 @@ export namespace Prisma {
     listenedAudiobooks: number
     playlists: number
     devices: number
+    searchRecords: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2144,6 +2236,7 @@ export namespace Prisma {
     listenedAudiobooks?: boolean | UserCountOutputTypeCountListenedAudiobooksArgs
     playlists?: boolean | UserCountOutputTypeCountPlaylistsArgs
     devices?: boolean | UserCountOutputTypeCountDevicesArgs
+    searchRecords?: boolean | UserCountOutputTypeCountSearchRecordsArgs
   }
 
   // Custom InputTypes
@@ -2211,6 +2304,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountDevicesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DeviceWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountSearchRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SearchRecordWhereInput
   }
 
 
@@ -12947,6 +13047,7 @@ export namespace Prisma {
     listenedAudiobooks?: boolean | User$listenedAudiobooksArgs<ExtArgs>
     playlists?: boolean | User$playlistsArgs<ExtArgs>
     devices?: boolean | User$devicesArgs<ExtArgs>
+    searchRecords?: boolean | User$searchRecordsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -12981,6 +13082,7 @@ export namespace Prisma {
     listenedAudiobooks?: boolean | User$listenedAudiobooksArgs<ExtArgs>
     playlists?: boolean | User$playlistsArgs<ExtArgs>
     devices?: boolean | User$devicesArgs<ExtArgs>
+    searchRecords?: boolean | User$searchRecordsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -13021,6 +13123,10 @@ export namespace Prisma {
        * 用户设备列表
        */
       devices: Prisma.$DevicePayload<ExtArgs>[]
+      /**
+       * 用户搜索记录
+       */
+      searchRecords: Prisma.$SearchRecordPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       /**
@@ -13441,6 +13547,7 @@ export namespace Prisma {
     listenedAudiobooks<T extends User$listenedAudiobooksArgs<ExtArgs> = {}>(args?: Subset<T, User$listenedAudiobooksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAudiobookHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     playlists<T extends User$playlistsArgs<ExtArgs> = {}>(args?: Subset<T, User$playlistsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlaylistPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     devices<T extends User$devicesArgs<ExtArgs> = {}>(args?: Subset<T, User$devicesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    searchRecords<T extends User$searchRecordsArgs<ExtArgs> = {}>(args?: Subset<T, User$searchRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14052,6 +14159,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.searchRecords
+   */
+  export type User$searchRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    where?: SearchRecordWhereInput
+    orderBy?: SearchRecordOrderByWithRelationInput | SearchRecordOrderByWithRelationInput[]
+    cursor?: SearchRecordWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SearchRecordScalarFieldEnum | SearchRecordScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -14067,6 +14198,1087 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SearchRecord
+   */
+
+  export type AggregateSearchRecord = {
+    _count: SearchRecordCountAggregateOutputType | null
+    _avg: SearchRecordAvgAggregateOutputType | null
+    _sum: SearchRecordSumAggregateOutputType | null
+    _min: SearchRecordMinAggregateOutputType | null
+    _max: SearchRecordMaxAggregateOutputType | null
+  }
+
+  export type SearchRecordAvgAggregateOutputType = {
+    id: number | null
+    userId: number | null
+  }
+
+  export type SearchRecordSumAggregateOutputType = {
+    id: number | null
+    userId: number | null
+  }
+
+  export type SearchRecordMinAggregateOutputType = {
+    id: number | null
+    keyword: string | null
+    createdAt: Date | null
+    userId: number | null
+  }
+
+  export type SearchRecordMaxAggregateOutputType = {
+    id: number | null
+    keyword: string | null
+    createdAt: Date | null
+    userId: number | null
+  }
+
+  export type SearchRecordCountAggregateOutputType = {
+    id: number
+    keyword: number
+    createdAt: number
+    userId: number
+    _all: number
+  }
+
+
+  export type SearchRecordAvgAggregateInputType = {
+    id?: true
+    userId?: true
+  }
+
+  export type SearchRecordSumAggregateInputType = {
+    id?: true
+    userId?: true
+  }
+
+  export type SearchRecordMinAggregateInputType = {
+    id?: true
+    keyword?: true
+    createdAt?: true
+    userId?: true
+  }
+
+  export type SearchRecordMaxAggregateInputType = {
+    id?: true
+    keyword?: true
+    createdAt?: true
+    userId?: true
+  }
+
+  export type SearchRecordCountAggregateInputType = {
+    id?: true
+    keyword?: true
+    createdAt?: true
+    userId?: true
+    _all?: true
+  }
+
+  export type SearchRecordAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SearchRecord to aggregate.
+     */
+    where?: SearchRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SearchRecords to fetch.
+     */
+    orderBy?: SearchRecordOrderByWithRelationInput | SearchRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SearchRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SearchRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SearchRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SearchRecords
+    **/
+    _count?: true | SearchRecordCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SearchRecordAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SearchRecordSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SearchRecordMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SearchRecordMaxAggregateInputType
+  }
+
+  export type GetSearchRecordAggregateType<T extends SearchRecordAggregateArgs> = {
+        [P in keyof T & keyof AggregateSearchRecord]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSearchRecord[P]>
+      : GetScalarType<T[P], AggregateSearchRecord[P]>
+  }
+
+
+
+
+  export type SearchRecordGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SearchRecordWhereInput
+    orderBy?: SearchRecordOrderByWithAggregationInput | SearchRecordOrderByWithAggregationInput[]
+    by: SearchRecordScalarFieldEnum[] | SearchRecordScalarFieldEnum
+    having?: SearchRecordScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SearchRecordCountAggregateInputType | true
+    _avg?: SearchRecordAvgAggregateInputType
+    _sum?: SearchRecordSumAggregateInputType
+    _min?: SearchRecordMinAggregateInputType
+    _max?: SearchRecordMaxAggregateInputType
+  }
+
+  export type SearchRecordGroupByOutputType = {
+    id: number
+    keyword: string
+    createdAt: Date
+    userId: number
+    _count: SearchRecordCountAggregateOutputType | null
+    _avg: SearchRecordAvgAggregateOutputType | null
+    _sum: SearchRecordSumAggregateOutputType | null
+    _min: SearchRecordMinAggregateOutputType | null
+    _max: SearchRecordMaxAggregateOutputType | null
+  }
+
+  type GetSearchRecordGroupByPayload<T extends SearchRecordGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SearchRecordGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SearchRecordGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SearchRecordGroupByOutputType[P]>
+            : GetScalarType<T[P], SearchRecordGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SearchRecordSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    keyword?: boolean
+    createdAt?: boolean
+    userId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["searchRecord"]>
+
+  export type SearchRecordSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    keyword?: boolean
+    createdAt?: boolean
+    userId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["searchRecord"]>
+
+  export type SearchRecordSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    keyword?: boolean
+    createdAt?: boolean
+    userId?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["searchRecord"]>
+
+  export type SearchRecordSelectScalar = {
+    id?: boolean
+    keyword?: boolean
+    createdAt?: boolean
+    userId?: boolean
+  }
+
+  export type SearchRecordOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "keyword" | "createdAt" | "userId", ExtArgs["result"]["searchRecord"]>
+  export type SearchRecordInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type SearchRecordIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type SearchRecordIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $SearchRecordPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SearchRecord"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      keyword: string
+      createdAt: Date
+      userId: number
+    }, ExtArgs["result"]["searchRecord"]>
+    composites: {}
+  }
+
+  type SearchRecordGetPayload<S extends boolean | null | undefined | SearchRecordDefaultArgs> = $Result.GetResult<Prisma.$SearchRecordPayload, S>
+
+  type SearchRecordCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SearchRecordFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SearchRecordCountAggregateInputType | true
+    }
+
+  export interface SearchRecordDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SearchRecord'], meta: { name: 'SearchRecord' } }
+    /**
+     * Find zero or one SearchRecord that matches the filter.
+     * @param {SearchRecordFindUniqueArgs} args - Arguments to find a SearchRecord
+     * @example
+     * // Get one SearchRecord
+     * const searchRecord = await prisma.searchRecord.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SearchRecordFindUniqueArgs>(args: SelectSubset<T, SearchRecordFindUniqueArgs<ExtArgs>>): Prisma__SearchRecordClient<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SearchRecord that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SearchRecordFindUniqueOrThrowArgs} args - Arguments to find a SearchRecord
+     * @example
+     * // Get one SearchRecord
+     * const searchRecord = await prisma.searchRecord.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SearchRecordFindUniqueOrThrowArgs>(args: SelectSubset<T, SearchRecordFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SearchRecordClient<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SearchRecord that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SearchRecordFindFirstArgs} args - Arguments to find a SearchRecord
+     * @example
+     * // Get one SearchRecord
+     * const searchRecord = await prisma.searchRecord.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SearchRecordFindFirstArgs>(args?: SelectSubset<T, SearchRecordFindFirstArgs<ExtArgs>>): Prisma__SearchRecordClient<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SearchRecord that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SearchRecordFindFirstOrThrowArgs} args - Arguments to find a SearchRecord
+     * @example
+     * // Get one SearchRecord
+     * const searchRecord = await prisma.searchRecord.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SearchRecordFindFirstOrThrowArgs>(args?: SelectSubset<T, SearchRecordFindFirstOrThrowArgs<ExtArgs>>): Prisma__SearchRecordClient<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SearchRecords that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SearchRecordFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SearchRecords
+     * const searchRecords = await prisma.searchRecord.findMany()
+     * 
+     * // Get first 10 SearchRecords
+     * const searchRecords = await prisma.searchRecord.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const searchRecordWithIdOnly = await prisma.searchRecord.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SearchRecordFindManyArgs>(args?: SelectSubset<T, SearchRecordFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SearchRecord.
+     * @param {SearchRecordCreateArgs} args - Arguments to create a SearchRecord.
+     * @example
+     * // Create one SearchRecord
+     * const SearchRecord = await prisma.searchRecord.create({
+     *   data: {
+     *     // ... data to create a SearchRecord
+     *   }
+     * })
+     * 
+     */
+    create<T extends SearchRecordCreateArgs>(args: SelectSubset<T, SearchRecordCreateArgs<ExtArgs>>): Prisma__SearchRecordClient<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SearchRecords.
+     * @param {SearchRecordCreateManyArgs} args - Arguments to create many SearchRecords.
+     * @example
+     * // Create many SearchRecords
+     * const searchRecord = await prisma.searchRecord.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SearchRecordCreateManyArgs>(args?: SelectSubset<T, SearchRecordCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SearchRecords and returns the data saved in the database.
+     * @param {SearchRecordCreateManyAndReturnArgs} args - Arguments to create many SearchRecords.
+     * @example
+     * // Create many SearchRecords
+     * const searchRecord = await prisma.searchRecord.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SearchRecords and only return the `id`
+     * const searchRecordWithIdOnly = await prisma.searchRecord.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SearchRecordCreateManyAndReturnArgs>(args?: SelectSubset<T, SearchRecordCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SearchRecord.
+     * @param {SearchRecordDeleteArgs} args - Arguments to delete one SearchRecord.
+     * @example
+     * // Delete one SearchRecord
+     * const SearchRecord = await prisma.searchRecord.delete({
+     *   where: {
+     *     // ... filter to delete one SearchRecord
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SearchRecordDeleteArgs>(args: SelectSubset<T, SearchRecordDeleteArgs<ExtArgs>>): Prisma__SearchRecordClient<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SearchRecord.
+     * @param {SearchRecordUpdateArgs} args - Arguments to update one SearchRecord.
+     * @example
+     * // Update one SearchRecord
+     * const searchRecord = await prisma.searchRecord.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SearchRecordUpdateArgs>(args: SelectSubset<T, SearchRecordUpdateArgs<ExtArgs>>): Prisma__SearchRecordClient<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SearchRecords.
+     * @param {SearchRecordDeleteManyArgs} args - Arguments to filter SearchRecords to delete.
+     * @example
+     * // Delete a few SearchRecords
+     * const { count } = await prisma.searchRecord.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SearchRecordDeleteManyArgs>(args?: SelectSubset<T, SearchRecordDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SearchRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SearchRecordUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SearchRecords
+     * const searchRecord = await prisma.searchRecord.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SearchRecordUpdateManyArgs>(args: SelectSubset<T, SearchRecordUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SearchRecords and returns the data updated in the database.
+     * @param {SearchRecordUpdateManyAndReturnArgs} args - Arguments to update many SearchRecords.
+     * @example
+     * // Update many SearchRecords
+     * const searchRecord = await prisma.searchRecord.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SearchRecords and only return the `id`
+     * const searchRecordWithIdOnly = await prisma.searchRecord.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SearchRecordUpdateManyAndReturnArgs>(args: SelectSubset<T, SearchRecordUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SearchRecord.
+     * @param {SearchRecordUpsertArgs} args - Arguments to update or create a SearchRecord.
+     * @example
+     * // Update or create a SearchRecord
+     * const searchRecord = await prisma.searchRecord.upsert({
+     *   create: {
+     *     // ... data to create a SearchRecord
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SearchRecord we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SearchRecordUpsertArgs>(args: SelectSubset<T, SearchRecordUpsertArgs<ExtArgs>>): Prisma__SearchRecordClient<$Result.GetResult<Prisma.$SearchRecordPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SearchRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SearchRecordCountArgs} args - Arguments to filter SearchRecords to count.
+     * @example
+     * // Count the number of SearchRecords
+     * const count = await prisma.searchRecord.count({
+     *   where: {
+     *     // ... the filter for the SearchRecords we want to count
+     *   }
+     * })
+    **/
+    count<T extends SearchRecordCountArgs>(
+      args?: Subset<T, SearchRecordCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SearchRecordCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SearchRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SearchRecordAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SearchRecordAggregateArgs>(args: Subset<T, SearchRecordAggregateArgs>): Prisma.PrismaPromise<GetSearchRecordAggregateType<T>>
+
+    /**
+     * Group by SearchRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SearchRecordGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SearchRecordGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SearchRecordGroupByArgs['orderBy'] }
+        : { orderBy?: SearchRecordGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SearchRecordGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSearchRecordGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SearchRecord model
+   */
+  readonly fields: SearchRecordFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SearchRecord.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SearchRecordClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SearchRecord model
+   */
+  interface SearchRecordFieldRefs {
+    readonly id: FieldRef<"SearchRecord", 'Int'>
+    readonly keyword: FieldRef<"SearchRecord", 'String'>
+    readonly createdAt: FieldRef<"SearchRecord", 'DateTime'>
+    readonly userId: FieldRef<"SearchRecord", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SearchRecord findUnique
+   */
+  export type SearchRecordFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which SearchRecord to fetch.
+     */
+    where: SearchRecordWhereUniqueInput
+  }
+
+  /**
+   * SearchRecord findUniqueOrThrow
+   */
+  export type SearchRecordFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which SearchRecord to fetch.
+     */
+    where: SearchRecordWhereUniqueInput
+  }
+
+  /**
+   * SearchRecord findFirst
+   */
+  export type SearchRecordFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which SearchRecord to fetch.
+     */
+    where?: SearchRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SearchRecords to fetch.
+     */
+    orderBy?: SearchRecordOrderByWithRelationInput | SearchRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SearchRecords.
+     */
+    cursor?: SearchRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SearchRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SearchRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SearchRecords.
+     */
+    distinct?: SearchRecordScalarFieldEnum | SearchRecordScalarFieldEnum[]
+  }
+
+  /**
+   * SearchRecord findFirstOrThrow
+   */
+  export type SearchRecordFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which SearchRecord to fetch.
+     */
+    where?: SearchRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SearchRecords to fetch.
+     */
+    orderBy?: SearchRecordOrderByWithRelationInput | SearchRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SearchRecords.
+     */
+    cursor?: SearchRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SearchRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SearchRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SearchRecords.
+     */
+    distinct?: SearchRecordScalarFieldEnum | SearchRecordScalarFieldEnum[]
+  }
+
+  /**
+   * SearchRecord findMany
+   */
+  export type SearchRecordFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which SearchRecords to fetch.
+     */
+    where?: SearchRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SearchRecords to fetch.
+     */
+    orderBy?: SearchRecordOrderByWithRelationInput | SearchRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SearchRecords.
+     */
+    cursor?: SearchRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SearchRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SearchRecords.
+     */
+    skip?: number
+    distinct?: SearchRecordScalarFieldEnum | SearchRecordScalarFieldEnum[]
+  }
+
+  /**
+   * SearchRecord create
+   */
+  export type SearchRecordCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SearchRecord.
+     */
+    data: XOR<SearchRecordCreateInput, SearchRecordUncheckedCreateInput>
+  }
+
+  /**
+   * SearchRecord createMany
+   */
+  export type SearchRecordCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SearchRecords.
+     */
+    data: SearchRecordCreateManyInput | SearchRecordCreateManyInput[]
+  }
+
+  /**
+   * SearchRecord createManyAndReturn
+   */
+  export type SearchRecordCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * The data used to create many SearchRecords.
+     */
+    data: SearchRecordCreateManyInput | SearchRecordCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SearchRecord update
+   */
+  export type SearchRecordUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SearchRecord.
+     */
+    data: XOR<SearchRecordUpdateInput, SearchRecordUncheckedUpdateInput>
+    /**
+     * Choose, which SearchRecord to update.
+     */
+    where: SearchRecordWhereUniqueInput
+  }
+
+  /**
+   * SearchRecord updateMany
+   */
+  export type SearchRecordUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SearchRecords.
+     */
+    data: XOR<SearchRecordUpdateManyMutationInput, SearchRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which SearchRecords to update
+     */
+    where?: SearchRecordWhereInput
+    /**
+     * Limit how many SearchRecords to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SearchRecord updateManyAndReturn
+   */
+  export type SearchRecordUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * The data used to update SearchRecords.
+     */
+    data: XOR<SearchRecordUpdateManyMutationInput, SearchRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which SearchRecords to update
+     */
+    where?: SearchRecordWhereInput
+    /**
+     * Limit how many SearchRecords to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SearchRecord upsert
+   */
+  export type SearchRecordUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SearchRecord to update in case it exists.
+     */
+    where: SearchRecordWhereUniqueInput
+    /**
+     * In case the SearchRecord found by the `where` argument doesn't exist, create a new SearchRecord with this data.
+     */
+    create: XOR<SearchRecordCreateInput, SearchRecordUncheckedCreateInput>
+    /**
+     * In case the SearchRecord was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SearchRecordUpdateInput, SearchRecordUncheckedUpdateInput>
+  }
+
+  /**
+   * SearchRecord delete
+   */
+  export type SearchRecordDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
+    /**
+     * Filter which SearchRecord to delete.
+     */
+    where: SearchRecordWhereUniqueInput
+  }
+
+  /**
+   * SearchRecord deleteMany
+   */
+  export type SearchRecordDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SearchRecords to delete
+     */
+    where?: SearchRecordWhereInput
+    /**
+     * Limit how many SearchRecords to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SearchRecord without action
+   */
+  export type SearchRecordDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SearchRecord
+     */
+    select?: SearchRecordSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SearchRecord
+     */
+    omit?: SearchRecordOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SearchRecordInclude<ExtArgs> | null
   }
 
 
@@ -17645,6 +18857,16 @@ export namespace Prisma {
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+  export const SearchRecordScalarFieldEnum: {
+    id: 'id',
+    keyword: 'keyword',
+    createdAt: 'createdAt',
+    userId: 'userId'
+  };
+
+  export type SearchRecordScalarFieldEnum = (typeof SearchRecordScalarFieldEnum)[keyof typeof SearchRecordScalarFieldEnum]
+
+
   export const DeviceScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -18374,6 +19596,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryListRelationFilter
     playlists?: PlaylistListRelationFilter
     devices?: DeviceListRelationFilter
+    searchRecords?: SearchRecordListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -18389,6 +19612,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryOrderByRelationAggregateInput
     playlists?: PlaylistOrderByRelationAggregateInput
     devices?: DeviceOrderByRelationAggregateInput
+    searchRecords?: SearchRecordOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -18407,6 +19631,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryListRelationFilter
     playlists?: PlaylistListRelationFilter
     devices?: DeviceListRelationFilter
+    searchRecords?: SearchRecordListRelationFilter
   }, "id" | "username">
 
   export type UserOrderByWithAggregationInput = {
@@ -18429,6 +19654,58 @@ export namespace Prisma {
     username?: StringWithAggregatesFilter<"User"> | string
     password?: StringWithAggregatesFilter<"User"> | string
     is_admin?: BoolWithAggregatesFilter<"User"> | boolean
+  }
+
+  export type SearchRecordWhereInput = {
+    AND?: SearchRecordWhereInput | SearchRecordWhereInput[]
+    OR?: SearchRecordWhereInput[]
+    NOT?: SearchRecordWhereInput | SearchRecordWhereInput[]
+    id?: IntFilter<"SearchRecord"> | number
+    keyword?: StringFilter<"SearchRecord"> | string
+    createdAt?: DateTimeFilter<"SearchRecord"> | Date | string
+    userId?: IntFilter<"SearchRecord"> | number
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type SearchRecordOrderByWithRelationInput = {
+    id?: SortOrder
+    keyword?: SortOrder
+    createdAt?: SortOrder
+    userId?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type SearchRecordWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: SearchRecordWhereInput | SearchRecordWhereInput[]
+    OR?: SearchRecordWhereInput[]
+    NOT?: SearchRecordWhereInput | SearchRecordWhereInput[]
+    keyword?: StringFilter<"SearchRecord"> | string
+    createdAt?: DateTimeFilter<"SearchRecord"> | Date | string
+    userId?: IntFilter<"SearchRecord"> | number
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type SearchRecordOrderByWithAggregationInput = {
+    id?: SortOrder
+    keyword?: SortOrder
+    createdAt?: SortOrder
+    userId?: SortOrder
+    _count?: SearchRecordCountOrderByAggregateInput
+    _avg?: SearchRecordAvgOrderByAggregateInput
+    _max?: SearchRecordMaxOrderByAggregateInput
+    _min?: SearchRecordMinOrderByAggregateInput
+    _sum?: SearchRecordSumOrderByAggregateInput
+  }
+
+  export type SearchRecordScalarWhereWithAggregatesInput = {
+    AND?: SearchRecordScalarWhereWithAggregatesInput | SearchRecordScalarWhereWithAggregatesInput[]
+    OR?: SearchRecordScalarWhereWithAggregatesInput[]
+    NOT?: SearchRecordScalarWhereWithAggregatesInput | SearchRecordScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"SearchRecord"> | number
+    keyword?: StringWithAggregatesFilter<"SearchRecord"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"SearchRecord"> | Date | string
+    userId?: IntWithAggregatesFilter<"SearchRecord"> | number
   }
 
   export type DeviceWhereInput = {
@@ -19203,6 +20480,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
     playlists?: PlaylistCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -19218,6 +20496,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
     playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -19232,6 +20511,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -19247,6 +20527,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -19267,6 +20548,51 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type SearchRecordCreateInput = {
+    keyword: string
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutSearchRecordsInput
+  }
+
+  export type SearchRecordUncheckedCreateInput = {
+    id?: number
+    keyword: string
+    createdAt?: Date | string
+    userId: number
+  }
+
+  export type SearchRecordUpdateInput = {
+    keyword?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutSearchRecordsNestedInput
+  }
+
+  export type SearchRecordUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    keyword?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type SearchRecordCreateManyInput = {
+    id?: number
+    keyword: string
+    createdAt?: Date | string
+    userId: number
+  }
+
+  export type SearchRecordUpdateManyMutationInput = {
+    keyword?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SearchRecordUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    keyword?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userId?: IntFieldUpdateOperationsInput | number
   }
 
   export type DeviceCreateInput = {
@@ -20142,7 +21468,17 @@ export namespace Prisma {
     none?: DeviceWhereInput
   }
 
+  export type SearchRecordListRelationFilter = {
+    every?: SearchRecordWhereInput
+    some?: SearchRecordWhereInput
+    none?: SearchRecordWhereInput
+  }
+
   export type DeviceOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SearchRecordOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -20173,6 +21509,37 @@ export namespace Prisma {
 
   export type UserSumOrderByAggregateInput = {
     id?: SortOrder
+  }
+
+  export type SearchRecordCountOrderByAggregateInput = {
+    id?: SortOrder
+    keyword?: SortOrder
+    createdAt?: SortOrder
+    userId?: SortOrder
+  }
+
+  export type SearchRecordAvgOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+  }
+
+  export type SearchRecordMaxOrderByAggregateInput = {
+    id?: SortOrder
+    keyword?: SortOrder
+    createdAt?: SortOrder
+    userId?: SortOrder
+  }
+
+  export type SearchRecordMinOrderByAggregateInput = {
+    id?: SortOrder
+    keyword?: SortOrder
+    createdAt?: SortOrder
+    userId?: SortOrder
+  }
+
+  export type SearchRecordSumOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
   }
 
   export type DeviceCountOrderByAggregateInput = {
@@ -20993,6 +22360,13 @@ export namespace Prisma {
     connect?: DeviceWhereUniqueInput | DeviceWhereUniqueInput[]
   }
 
+  export type SearchRecordCreateNestedManyWithoutUserInput = {
+    create?: XOR<SearchRecordCreateWithoutUserInput, SearchRecordUncheckedCreateWithoutUserInput> | SearchRecordCreateWithoutUserInput[] | SearchRecordUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SearchRecordCreateOrConnectWithoutUserInput | SearchRecordCreateOrConnectWithoutUserInput[]
+    createMany?: SearchRecordCreateManyUserInputEnvelope
+    connect?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+  }
+
   export type UserTrackLikeUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<UserTrackLikeCreateWithoutUserInput, UserTrackLikeUncheckedCreateWithoutUserInput> | UserTrackLikeCreateWithoutUserInput[] | UserTrackLikeUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserTrackLikeCreateOrConnectWithoutUserInput | UserTrackLikeCreateOrConnectWithoutUserInput[]
@@ -21047,6 +22421,13 @@ export namespace Prisma {
     connectOrCreate?: DeviceCreateOrConnectWithoutUserInput | DeviceCreateOrConnectWithoutUserInput[]
     createMany?: DeviceCreateManyUserInputEnvelope
     connect?: DeviceWhereUniqueInput | DeviceWhereUniqueInput[]
+  }
+
+  export type SearchRecordUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<SearchRecordCreateWithoutUserInput, SearchRecordUncheckedCreateWithoutUserInput> | SearchRecordCreateWithoutUserInput[] | SearchRecordUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SearchRecordCreateOrConnectWithoutUserInput | SearchRecordCreateOrConnectWithoutUserInput[]
+    createMany?: SearchRecordCreateManyUserInputEnvelope
+    connect?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
   }
 
   export type UserTrackLikeUpdateManyWithoutUserNestedInput = {
@@ -21161,6 +22542,20 @@ export namespace Prisma {
     deleteMany?: DeviceScalarWhereInput | DeviceScalarWhereInput[]
   }
 
+  export type SearchRecordUpdateManyWithoutUserNestedInput = {
+    create?: XOR<SearchRecordCreateWithoutUserInput, SearchRecordUncheckedCreateWithoutUserInput> | SearchRecordCreateWithoutUserInput[] | SearchRecordUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SearchRecordCreateOrConnectWithoutUserInput | SearchRecordCreateOrConnectWithoutUserInput[]
+    upsert?: SearchRecordUpsertWithWhereUniqueWithoutUserInput | SearchRecordUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: SearchRecordCreateManyUserInputEnvelope
+    set?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+    disconnect?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+    delete?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+    connect?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+    update?: SearchRecordUpdateWithWhereUniqueWithoutUserInput | SearchRecordUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: SearchRecordUpdateManyWithWhereWithoutUserInput | SearchRecordUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: SearchRecordScalarWhereInput | SearchRecordScalarWhereInput[]
+  }
+
   export type UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<UserTrackLikeCreateWithoutUserInput, UserTrackLikeUncheckedCreateWithoutUserInput> | UserTrackLikeCreateWithoutUserInput[] | UserTrackLikeUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserTrackLikeCreateOrConnectWithoutUserInput | UserTrackLikeCreateOrConnectWithoutUserInput[]
@@ -21271,6 +22666,34 @@ export namespace Prisma {
     update?: DeviceUpdateWithWhereUniqueWithoutUserInput | DeviceUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: DeviceUpdateManyWithWhereWithoutUserInput | DeviceUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: DeviceScalarWhereInput | DeviceScalarWhereInput[]
+  }
+
+  export type SearchRecordUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<SearchRecordCreateWithoutUserInput, SearchRecordUncheckedCreateWithoutUserInput> | SearchRecordCreateWithoutUserInput[] | SearchRecordUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SearchRecordCreateOrConnectWithoutUserInput | SearchRecordCreateOrConnectWithoutUserInput[]
+    upsert?: SearchRecordUpsertWithWhereUniqueWithoutUserInput | SearchRecordUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: SearchRecordCreateManyUserInputEnvelope
+    set?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+    disconnect?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+    delete?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+    connect?: SearchRecordWhereUniqueInput | SearchRecordWhereUniqueInput[]
+    update?: SearchRecordUpdateWithWhereUniqueWithoutUserInput | SearchRecordUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: SearchRecordUpdateManyWithWhereWithoutUserInput | SearchRecordUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: SearchRecordScalarWhereInput | SearchRecordScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutSearchRecordsInput = {
+    create?: XOR<UserCreateWithoutSearchRecordsInput, UserUncheckedCreateWithoutSearchRecordsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSearchRecordsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutSearchRecordsNestedInput = {
+    create?: XOR<UserCreateWithoutSearchRecordsInput, UserUncheckedCreateWithoutSearchRecordsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSearchRecordsInput
+    upsert?: UserUpsertWithoutSearchRecordsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutSearchRecordsInput, UserUpdateWithoutSearchRecordsInput>, UserUncheckedUpdateWithoutSearchRecordsInput>
   }
 
   export type UserCreateNestedOneWithoutDevicesInput = {
@@ -22363,6 +23786,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
     playlists?: PlaylistCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutLikedTracksInput = {
@@ -22377,6 +23801,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
     playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutLikedTracksInput = {
@@ -22456,6 +23881,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutLikedTracksInput = {
@@ -22470,6 +23896,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TrackUpsertWithoutLikedByUsersInput = {
@@ -22539,6 +23966,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
     playlists?: PlaylistCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutListenedTracksInput = {
@@ -22553,6 +23981,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
     playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutListenedTracksInput = {
@@ -22654,6 +24083,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutListenedTracksInput = {
@@ -22668,6 +24098,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TrackUpsertWithoutListenedByUsersInput = {
@@ -22765,6 +24196,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
     playlists?: PlaylistCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutLikedAlbumsInput = {
@@ -22779,6 +24211,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
     playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutLikedAlbumsInput = {
@@ -22834,6 +24267,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutLikedAlbumsInput = {
@@ -22848,6 +24282,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AlbumUpsertWithoutLikedByUsersInput = {
@@ -22893,6 +24328,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
     playlists?: PlaylistCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutListenedAlbumsInput = {
@@ -22907,6 +24343,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
     playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutListenedAlbumsInput = {
@@ -22962,6 +24399,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutListenedAlbumsInput = {
@@ -22976,6 +24414,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AlbumUpsertWithoutListenedByUsersInput = {
@@ -23021,6 +24460,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
     playlists?: PlaylistCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutLikedAudiobooksInput = {
@@ -23035,6 +24475,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
     playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutLikedAudiobooksInput = {
@@ -23114,6 +24555,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutLikedAudiobooksInput = {
@@ -23128,6 +24570,7 @@ export namespace Prisma {
     listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TrackUpsertWithoutLikedAsAudiobookByUsersInput = {
@@ -23197,6 +24640,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeCreateNestedManyWithoutUserInput
     playlists?: PlaylistCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutListenedAudiobooksInput = {
@@ -23211,6 +24655,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUncheckedCreateNestedManyWithoutUserInput
     playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutListenedAudiobooksInput = {
@@ -23290,6 +24735,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutListenedAudiobooksInput = {
@@ -23304,6 +24750,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUncheckedUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TrackUpsertWithoutListenedAsAudiobookByUsersInput = {
@@ -23544,6 +24991,26 @@ export namespace Prisma {
     data: DeviceCreateManyUserInput | DeviceCreateManyUserInput[]
   }
 
+  export type SearchRecordCreateWithoutUserInput = {
+    keyword: string
+    createdAt?: Date | string
+  }
+
+  export type SearchRecordUncheckedCreateWithoutUserInput = {
+    id?: number
+    keyword: string
+    createdAt?: Date | string
+  }
+
+  export type SearchRecordCreateOrConnectWithoutUserInput = {
+    where: SearchRecordWhereUniqueInput
+    create: XOR<SearchRecordCreateWithoutUserInput, SearchRecordUncheckedCreateWithoutUserInput>
+  }
+
+  export type SearchRecordCreateManyUserInputEnvelope = {
+    data: SearchRecordCreateManyUserInput | SearchRecordCreateManyUserInput[]
+  }
+
   export type UserTrackLikeUpsertWithWhereUniqueWithoutUserInput = {
     where: UserTrackLikeWhereUniqueInput
     update: XOR<UserTrackLikeUpdateWithoutUserInput, UserTrackLikeUncheckedUpdateWithoutUserInput>
@@ -23684,6 +25151,106 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Device"> | Date | string
   }
 
+  export type SearchRecordUpsertWithWhereUniqueWithoutUserInput = {
+    where: SearchRecordWhereUniqueInput
+    update: XOR<SearchRecordUpdateWithoutUserInput, SearchRecordUncheckedUpdateWithoutUserInput>
+    create: XOR<SearchRecordCreateWithoutUserInput, SearchRecordUncheckedCreateWithoutUserInput>
+  }
+
+  export type SearchRecordUpdateWithWhereUniqueWithoutUserInput = {
+    where: SearchRecordWhereUniqueInput
+    data: XOR<SearchRecordUpdateWithoutUserInput, SearchRecordUncheckedUpdateWithoutUserInput>
+  }
+
+  export type SearchRecordUpdateManyWithWhereWithoutUserInput = {
+    where: SearchRecordScalarWhereInput
+    data: XOR<SearchRecordUpdateManyMutationInput, SearchRecordUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type SearchRecordScalarWhereInput = {
+    AND?: SearchRecordScalarWhereInput | SearchRecordScalarWhereInput[]
+    OR?: SearchRecordScalarWhereInput[]
+    NOT?: SearchRecordScalarWhereInput | SearchRecordScalarWhereInput[]
+    id?: IntFilter<"SearchRecord"> | number
+    keyword?: StringFilter<"SearchRecord"> | string
+    createdAt?: DateTimeFilter<"SearchRecord"> | Date | string
+    userId?: IntFilter<"SearchRecord"> | number
+  }
+
+  export type UserCreateWithoutSearchRecordsInput = {
+    username: string
+    password: string
+    is_admin?: boolean
+    likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
+    listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
+    likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
+    listenedAlbums?: UserAlbumHistoryCreateNestedManyWithoutUserInput
+    likedAudiobooks?: UserAudiobookLikeCreateNestedManyWithoutUserInput
+    listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
+    playlists?: PlaylistCreateNestedManyWithoutUserInput
+    devices?: DeviceCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutSearchRecordsInput = {
+    id?: number
+    username: string
+    password: string
+    is_admin?: boolean
+    likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
+    listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
+    likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
+    listenedAlbums?: UserAlbumHistoryUncheckedCreateNestedManyWithoutUserInput
+    likedAudiobooks?: UserAudiobookLikeUncheckedCreateNestedManyWithoutUserInput
+    listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
+    playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
+    devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutSearchRecordsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutSearchRecordsInput, UserUncheckedCreateWithoutSearchRecordsInput>
+  }
+
+  export type UserUpsertWithoutSearchRecordsInput = {
+    update: XOR<UserUpdateWithoutSearchRecordsInput, UserUncheckedUpdateWithoutSearchRecordsInput>
+    create: XOR<UserCreateWithoutSearchRecordsInput, UserUncheckedCreateWithoutSearchRecordsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutSearchRecordsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutSearchRecordsInput, UserUncheckedUpdateWithoutSearchRecordsInput>
+  }
+
+  export type UserUpdateWithoutSearchRecordsInput = {
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    is_admin?: BoolFieldUpdateOperationsInput | boolean
+    likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
+    listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
+    likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
+    listenedAlbums?: UserAlbumHistoryUpdateManyWithoutUserNestedInput
+    likedAudiobooks?: UserAudiobookLikeUpdateManyWithoutUserNestedInput
+    listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
+    playlists?: PlaylistUpdateManyWithoutUserNestedInput
+    devices?: DeviceUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutSearchRecordsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    is_admin?: BoolFieldUpdateOperationsInput | boolean
+    likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
+    listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
+    likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
+    listenedAlbums?: UserAlbumHistoryUncheckedUpdateManyWithoutUserNestedInput
+    likedAudiobooks?: UserAudiobookLikeUncheckedUpdateManyWithoutUserNestedInput
+    listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
+    playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
+    devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+  }
+
   export type UserCreateWithoutDevicesInput = {
     username: string
     password: string
@@ -23695,6 +25262,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeCreateNestedManyWithoutUserInput
     listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
     playlists?: PlaylistCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutDevicesInput = {
@@ -23709,6 +25277,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUncheckedCreateNestedManyWithoutUserInput
     listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
     playlists?: PlaylistUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutDevicesInput = {
@@ -23766,6 +25335,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUpdateManyWithoutUserNestedInput
     listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDevicesInput = {
@@ -23780,6 +25350,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
     playlists?: PlaylistUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserTrackHistoryUpsertWithWhereUniqueWithoutDeviceInput = {
@@ -23809,6 +25380,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeCreateNestedManyWithoutUserInput
     listenedAudiobooks?: UserAudiobookHistoryCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPlaylistsInput = {
@@ -23823,6 +25395,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUncheckedCreateNestedManyWithoutUserInput
     listenedAudiobooks?: UserAudiobookHistoryUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    searchRecords?: SearchRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPlaylistsInput = {
@@ -23902,6 +25475,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUpdateManyWithoutUserNestedInput
     listenedAudiobooks?: UserAudiobookHistoryUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPlaylistsInput = {
@@ -23916,6 +25490,7 @@ export namespace Prisma {
     likedAudiobooks?: UserAudiobookLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedAudiobooks?: UserAudiobookHistoryUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    searchRecords?: SearchRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TrackUpsertWithWhereUniqueWithoutPlaylistsInput = {
@@ -24510,6 +26085,12 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type SearchRecordCreateManyUserInput = {
+    id?: number
+    keyword: string
+    createdAt?: Date | string
+  }
+
   export type UserTrackLikeUpdateWithoutUserInput = {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     track?: TrackUpdateOneRequiredWithoutLikedByUsersNestedInput
@@ -24675,6 +26256,23 @@ export namespace Prisma {
     isOnline?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SearchRecordUpdateWithoutUserInput = {
+    keyword?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SearchRecordUncheckedUpdateWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    keyword?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SearchRecordUncheckedUpdateManyWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    keyword?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserTrackHistoryCreateManyDeviceInput = {

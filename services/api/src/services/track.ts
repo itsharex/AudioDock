@@ -250,7 +250,7 @@ export class TrackService {
 
   // 搜索单曲
   async searchTracks(keyword: string, type?: TrackType, limit: number = 10): Promise<Track[]> {
-    return await this.prisma.track.findMany({
+    const candidates = await this.prisma.track.findMany({
       where: {
         AND: [
           type ? { type } : {},
@@ -263,14 +263,42 @@ export class TrackService {
           },
         ],
       },
-      take: limit,
-      orderBy: { id: 'desc' },
+      take: 100,
       include: {
         artistEntity: true,
         albumEntity: true,
         likedByUsers: true,
       },
     });
+
+    const normalizedKeyword = keyword.toLowerCase();
+
+    return candidates
+      .sort((a, b) => {
+        const getScore = (track: Track) => {
+          const nName = track.name.toLowerCase();
+          const nArtist = (track.artist || '').toLowerCase();
+          const nAlbum = (track.album || '').toLowerCase();
+          let score = 0;
+
+          if (nName === normalizedKeyword) score = Math.max(score, 100);
+          else if (nName.startsWith(normalizedKeyword)) score = Math.max(score, 95);
+          else if (nName.includes(normalizedKeyword)) score = Math.max(score, 70);
+
+          if (nArtist === normalizedKeyword || nAlbum === normalizedKeyword) score = Math.max(score, 80);
+          else if (nArtist.startsWith(normalizedKeyword) || nAlbum.startsWith(normalizedKeyword)) score = Math.max(score, 60);
+          else if (nArtist.includes(normalizedKeyword) || nAlbum.includes(normalizedKeyword)) score = Math.max(score, 50);
+
+          return score;
+        };
+
+        const scoreA = getScore(a);
+        const scoreB = getScore(b);
+
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.name.length - b.name.length;
+      })
+      .slice(0, limit);
   }
 
   // 获取最新单曲

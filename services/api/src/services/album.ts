@@ -188,16 +188,43 @@ export class AlbumService {
       where.type = type;
     }
 
-    const albums = await this.prisma.album.findMany({
+    const candidates = await this.prisma.album.findMany({
       where,
-      take: limit,
-      orderBy: { id: 'desc' },
+      take: 100,
     });
 
+    const normalizedKeyword = keyword.toLowerCase();
+
+    const sortedAlbums = candidates
+      .sort((a, b) => {
+        const getScore = (name: string, artist: string) => {
+          const nName = name.toLowerCase();
+          const nArtist = (artist || '').toLowerCase();
+          let score = 0;
+
+          if (nName === normalizedKeyword) score = Math.max(score, 100);
+          else if (nName.startsWith(normalizedKeyword)) score = Math.max(score, 90);
+          else if (nName.includes(normalizedKeyword)) score = Math.max(score, 70);
+
+          if (nArtist === normalizedKeyword) score = Math.max(score, 80);
+          else if (nArtist.startsWith(normalizedKeyword)) score = Math.max(score, 60);
+          else if (nArtist.includes(normalizedKeyword)) score = Math.max(score, 50);
+
+          return score;
+        };
+
+        const scoreA = getScore(a.name, a.artist);
+        const scoreB = getScore(b.name, b.artist);
+
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.name.length - b.name.length;
+      })
+      .slice(0, limit);
+
     if (type === 'AUDIOBOOK') {
-      return await this.attachProgressToAlbums(albums, userId); // Default userId 1
+      return await this.attachProgressToAlbums(sortedAlbums, userId);
     }
-    return albums;
+    return sortedAlbums;
   }
 
   // Helper: Attach progress to audiobook albums
