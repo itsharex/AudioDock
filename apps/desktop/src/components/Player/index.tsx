@@ -1,44 +1,44 @@
 import Icon, {
-  BackwardOutlined, // Added as per instruction
-  DeliveredProcedureOutlined,
-  DownOutlined,
-  FontColorsOutlined,
-  ForwardOutlined,
-  HeartFilled,
-  HeartOutlined,
-  OrderedListOutlined,
-  PauseCircleFilled,
-  PlayCircleFilled,
-  SoundOutlined,
-  StepBackwardOutlined,
-  StepForwardOutlined,
-  TeamOutlined,
+    BackwardOutlined, // Added as per instruction
+    DeliveredProcedureOutlined,
+    DownOutlined,
+    FontColorsOutlined,
+    ForwardOutlined,
+    HeartFilled,
+    HeartOutlined,
+    OrderedListOutlined,
+    PauseCircleFilled,
+    PlayCircleFilled,
+    SoundOutlined,
+    StepBackwardOutlined,
+    StepForwardOutlined,
+    TeamOutlined,
 } from "@ant-design/icons";
 import {
-  addToHistory,
-  addTrackToPlaylist,
-  deleteTrack,
-  getDeletionImpact,
-  getLatestHistory,
-  getPlaylists,
-  type Playlist,
+    addToHistory,
+    addTrackToPlaylist,
+    deleteTrack,
+    getDeletionImpact,
+    getLatestHistory,
+    getPlaylists,
+    type Playlist,
 } from "@soundx/services";
 import {
-  Avatar, // Added
-  Button,
-  Drawer,
-  Flex,
-  InputNumber,
-  List, // Rename to avoid conflict if needed, though useMessage is typically context. Context is safer.
-  Modal,
-  notification, // Added
-  Popover,
-  Slider,
-  Space, // Added
-  Tabs,
-  theme,
-  Tooltip,
-  Typography,
+    Avatar, // Added
+    Button,
+    Drawer,
+    Flex,
+    InputNumber,
+    List, // Rename to avoid conflict if needed, though useMessage is typically context. Context is safer.
+    Modal,
+    notification, // Added
+    Popover,
+    Slider,
+    Space, // Added
+    Tabs,
+    theme,
+    Tooltip,
+    Typography,
 } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -52,6 +52,7 @@ import { useMediaSession } from "../../hooks/useMediaSession";
 import { getBaseURL } from "../../https";
 import { type Device, type Track, TrackType } from "../../models";
 import { socketService } from "../../services/socket";
+import { resolveTrackUri } from "../../services/trackResolver";
 import { useAuthStore } from "../../store/auth";
 import { usePlayerStore } from "../../store/player";
 import { useSettingsStore } from "../../store/settings";
@@ -140,6 +141,26 @@ const Player: React.FC = () => {
     const saved = localStorage.getItem("sleepTimerMode");
     return (saved as "off" | "time" | "count" | "current") || "off";
   });
+  const cacheEnabled = useSettingsStore((state) => state.download.cacheEnabled);
+  const [resolvedUri, setResolvedUri] = useState<string | undefined>(() => {
+    if (!currentTrack?.path) return undefined;
+    return currentTrack.path.startsWith("http")
+      ? currentTrack.path
+      : `${getBaseURL()}${currentTrack.path}`;
+  });
+
+  useEffect(() => {
+    if (!currentTrack) {
+      setResolvedUri(undefined);
+      return;
+    }
+
+    // Resolve for cache (will overwrite resolvedUri if cached)
+    resolveTrackUri(currentTrack, { cacheEnabled }).then((uri) => {
+      // Only update if we still have a track and the URI changed
+      if (uri) setResolvedUri(uri);
+    });
+  }, [currentTrack?.id, cacheEnabled]);
   const [sleepTimerEndTime, setSleepTimerEndTime] = useState<number | null>(
     () => {
       const saved = localStorage.getItem("sleepTimerEndTime");
@@ -493,7 +514,13 @@ const Player: React.FC = () => {
 
   // Handle play/pause and initial seek
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && resolvedUri) {
+      // Ensure the audio element's src is up to date with our resolved URI
+      // HTMLAudioElement.src returns a full URL, so we just set it if different
+      if (!audioRef.current.src.includes(resolvedUri)) {
+        audioRef.current.src = resolvedUri;
+      }
+
       if (isPlaying) {
         audioRef.current.play().catch((e) => {
           console.error("Playback failed", e);
@@ -507,7 +534,7 @@ const Player: React.FC = () => {
         audioRef.current.currentTime = currentTime;
       }
     }
-  }, [isPlaying, currentTrack]);
+  }, [isPlaying, resolvedUri]);
 
   useEffect(() => {
     if (
@@ -1130,9 +1157,7 @@ const Player: React.FC = () => {
     >
       <audio
         ref={audioRef}
-        src={
-          currentTrack?.path ? `${getBaseURL()}${currentTrack.path}` : undefined
-        }
+        src={resolvedUri}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}

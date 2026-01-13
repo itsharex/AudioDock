@@ -27,6 +27,7 @@ export interface SettingsState {
     downloadPath: string;
     quality: '128k' | '320k' | 'flac';
     concurrentDownloads: number;
+    cacheEnabled: boolean;
   };
 
   updateGeneral: (key: keyof SettingsState['general'], value: any) => void;
@@ -60,6 +61,7 @@ export const useSettingsStore = create<SettingsState>()(
         downloadPath: '~/Music/Downloads',
         quality: '320k',
         concurrentDownloads: 3,
+        cacheEnabled: true,
       },
 
       updateGeneral: (key, value) => {
@@ -102,7 +104,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'soundx-settings',
-      version: 1,
+      version: 2,
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
           // Migration from version 0 to 1
@@ -113,6 +115,12 @@ export const useSettingsStore = create<SettingsState>()(
             if (persistedState.general.acceptSync === undefined) {
               persistedState.general.acceptSync = true;
             }
+          }
+        }
+        if (version <= 1) {
+          // Migration to version 2
+          if (persistedState.download && persistedState.download.cacheEnabled === undefined) {
+            persistedState.download.cacheEnabled = true;
           }
         }
         return persistedState;
