@@ -1,8 +1,17 @@
 import {
+  ArrowLeftOutlined,
   FolderOpenOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
-import { Button, Col, Empty, message, Row, Tooltip, Typography } from "antd";
+import {
+  Button,
+  Col,
+  Empty,
+  message,
+  Row,
+  Tooltip,
+  Typography,
+} from "antd";
 import React, { useEffect, useState } from "react";
 import Cover from "../../components/Cover/index";
 import TrackList from "../../components/TrackList";
@@ -17,6 +26,7 @@ const { Title } = Typography;
 const Downloads: React.FC = () => {
   const [localItems, setLocalItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState<any | null>(null);
   const { play, setPlaylist } = usePlayerStore();
   const { mode } = usePlayMode();
   const downloadPath = useSettingsStore((state) => state.download.downloadPath);
@@ -40,17 +50,20 @@ const Downloads: React.FC = () => {
 
   useEffect(() => {
     fetchLocalItems();
+    setSelectedAlbum(null); // Reset selection on mode change
   }, [mode, downloadPath]);
 
   const handleOpenFolder = () => {
     if (!(window as any).ipcRenderer) return;
     const subFolder = mode === "MUSIC" ? "music" : "audio";
     const fullPath = downloadPath + "/" + subFolder;
-    (window as any).ipcRenderer.invoke("open-directory", fullPath).then((res: any) => {
-      if (res && typeof res === "string" && res.includes("Could not")) {
-        message.error(res);
-      }
-    });
+    (window as any)
+      .ipcRenderer.invoke("open-directory", fullPath)
+      .then((res: any) => {
+        if (res && typeof res === "string" && res.includes("Could not")) {
+          message.error(res);
+        }
+      });
   };
 
   // Group by album for Audiobook mode
@@ -58,6 +71,8 @@ const Downloads: React.FC = () => {
   if (mode === "AUDIOBOOK") {
     const albumMap = new Map<string, any>();
     localItems.forEach((item) => {
+      // Use album name as key if ID is missing or not unique enough in flat list?
+      // Assuming album name is consistent.
       if (!albumMap.has(item.album)) {
         albumMap.set(item.album, {
           id: item.albumId || item.album, // Fallback if no ID
@@ -71,14 +86,89 @@ const Downloads: React.FC = () => {
       albumMap.get(item.album).tracks.push(item);
     });
     albumMap.forEach((val) => albums.push(val));
+    // Sort albums by name or something if needed
   }
+
+  const renderContent = () => {
+    if (loading && localItems.length === 0) return null;
+
+    if (localItems.length === 0) {
+      return (
+        <div className={styles.noData}>
+          <Empty description="暂无下载内容" />
+        </div>
+      );
+    }
+
+    if (mode === "MUSIC") {
+      return (
+        <TrackList
+          tracks={localItems}
+          loading={loading}
+          showIndex={false}
+          showArtist={true}
+          showAlbum={true}
+          onPlay={(track, tracks) => {
+            setPlaylist(tracks);
+            play(track, -1);
+          }}
+          onRefresh={fetchLocalItems}
+        />
+      );
+    } else {
+      // AUDIOBOOK MODE
+      if (selectedAlbum) {
+        return (
+          <TrackList
+            tracks={selectedAlbum.tracks}
+            loading={loading}
+            type={selectedAlbum.type}
+            showIndex={true}
+            showArtist={true}
+            showAlbum={false}
+            showCover={false}
+            onPlay={(track, tracks) => {
+              setPlaylist(tracks);
+              // For audiobooks, we might want to resume progress
+              const shouldResume =
+                (track as any).progress && (track as any).progress > 0;
+              play(track, undefined, shouldResume ? (track as any).progress : 0);
+            }}
+            onRefresh={fetchLocalItems}
+          />
+        );
+      }
+
+      return (
+        <Row gutter={[16, 16]}>
+          {albums.map((album) => (
+            <Col key={album.name}>
+              <Cover
+                item={album as Album}
+                onClick={() => setSelectedAlbum(album)}
+              />
+            </Col>
+          ))}
+        </Row>
+      );
+    }
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
-        <Title level={2} className={styles.title}>
-          下载
-        </Title>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {selectedAlbum && (
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => setSelectedAlbum(null)}
+              type="text"
+            />
+          )}
+          <Title level={2} className={styles.title} style={{ margin: 0 }}>
+            {selectedAlbum ? selectedAlbum.name : "下载"}
+          </Title>
+        </div>
         <div style={{ display: "flex", gap: "8px" }}>
           <Tooltip title="打开下载文件夹">
             <Button
@@ -98,40 +188,7 @@ const Downloads: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles.content}>
-        {mode === "MUSIC" ? (
-          localItems.length === 0 ? (
-            <></>
-          ) : (
-             <TrackList
-              tracks={localItems}
-              loading={loading}
-              showIndex={false}
-              showArtist={true}
-              showAlbum={true}
-              onPlay={(track, tracks) => {
-                setPlaylist(tracks);
-                play(track, -1);
-              }}
-              onRefresh={fetchLocalItems}
-            />
-          )
-        ) : (
-          <Row gutter={[16, 16]}>
-            {albums.map((album) => (
-              <Col key={album.name}>
-                <Cover item={album as Album} />
-              </Col>
-            ))}
-          </Row>
-        )}
-
-        {localItems.length === 0 && !loading && (
-          <div className={styles.noData}>
-            <Empty description="暂无下载内容" />
-          </div>
-        )}
-      </div>
+      <div className={styles.content}>{renderContent()}</div>
     </div>
   );
 };

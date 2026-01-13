@@ -19,11 +19,16 @@ import styles from "./index.module.less";
 const { Title, Text } = Typography;
 
 interface CoverComponent
-  extends React.FC<{ item: Album | Track; size?: number; isTrack?: boolean }> {
+  extends React.FC<{
+    item: Album | Track;
+    size?: number;
+    isTrack?: boolean;
+    onClick?: (item: Album | Track) => void;
+  }> {
   Skeleton: React.FC;
 }
 
-const Cover: CoverComponent = ({ item, size, isTrack = false }) => {
+const Cover: CoverComponent = ({ item, size, isTrack = false, onClick }) => {
   const message = useMessage();
   const navigate = useNavigate();
   const { play, setPlaylist } = usePlayerStore();
@@ -54,6 +59,10 @@ const Cover: CoverComponent = ({ item, size, isTrack = false }) => {
   };
 
   const handleClick = () => {
+    if (onClick) {
+      onClick(item);
+      return;
+    }
     if (isTrack) {
       // For tracks, play directly
       play(item as Track);
