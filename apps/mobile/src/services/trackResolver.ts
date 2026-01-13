@@ -34,7 +34,7 @@ export const resolveTrackUri = async (
 
     // 3. If not cached but features is enabled, trigger background download
     console.log(`[TrackResolver] Not cached, starting background download: ${track.id}`);
-    downloadTrack(track.id, remoteUri).catch((e) =>
+    downloadTrack(track, remoteUri).catch((e) =>
       console.error("[TrackResolver] Cache download failed", e)
     );
   }
