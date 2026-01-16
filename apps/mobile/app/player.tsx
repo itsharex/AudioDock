@@ -284,7 +284,15 @@ export default function PlayerScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Text style={{ color: colors.text }}>No track playing</Text>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(tabs)");
+            }
+          }}
+        >
           <Text style={{ color: colors.primary, marginTop: 20 }}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -549,7 +557,13 @@ export default function PlayerScreen() {
           <View style={[styles.landscapeLeft]}>
             <View style={styles.landscapeBackBtn}>
               <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={() => {
+                  if (router.canGoBack()) {
+                    router.back();
+                  } else {
+                    router.replace("/(tabs)");
+                  }
+                }}
                 style={styles.landscapeBackBtn}
               >
                 <Ionicons name="chevron-down" size={30} color={colors.text} />
@@ -662,7 +676,13 @@ export default function PlayerScreen() {
     >
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(tabs)");
+            }
+          }}
           style={styles.headerButton}
         >
           <Ionicons name="chevron-down" size={30} color={colors.text} />

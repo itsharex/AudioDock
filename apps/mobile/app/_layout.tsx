@@ -1,6 +1,6 @@
 import * as Linking from 'expo-linking';
 import { Stack, useRouter, useSegments } from "expo-router";
-import { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import "react-native-reanimated";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
 import { PlayerProvider } from "../src/context/PlayerContext";
@@ -19,31 +19,15 @@ function RootLayoutNav() {
   const { token, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-
   const url = Linking.useURL();
+  const handledUrlsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    // Handle deep link notification.click
-    if (url) {
-      const parsed = Linking.parse(url);
-      if (parsed.hostname === "notification.click" || parsed.path === "notification.click") {
-        router.replace("/player");
-        return;
-      }
-    }
-
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(tabs)";
-    const path = segments.join("/");
 
-    // Also check segments as fallback
-    if (path.includes("notification.click")) {
-      router.replace("/player");
-      return;
-    }
-
-    // 排除 artist / album / modal 页面
+    // 排除 artist / album / modal / notification.click 页面
     const isDetailPage =
       segments[0] === "artist" ||
       segments[0] === "album" ||
@@ -53,14 +37,15 @@ function RootLayoutNav() {
       segments[0] === "settings" ||
       segments[0] === "playlist" ||
       segments[0] === "folder" ||
-      segments[0] === "admin";
+      segments[0] === "admin" ||
+      segments[0] === "notification.click";
 
     if (!token && inAuthGroup) {
       router.replace("/login");
     } else if (token && !inAuthGroup && !isDetailPage) {
       router.replace("/(tabs)");
     }
-  }, [token, segments, isLoading, url]);
+  }, [token, segments, isLoading]);
 
   return (
     <>
@@ -108,6 +93,7 @@ function RootLayoutNav() {
         <Stack.Screen name="artist/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="folder/index" options={{ headerShown: false }} />
         <Stack.Screen name="folder/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="notification.click" options={{ headerShown: false }} />
       </Stack>
       {(segments[0] as string) !== "player" && <PlaylistModal />}
     </>
