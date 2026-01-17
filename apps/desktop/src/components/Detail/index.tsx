@@ -1,20 +1,21 @@
 import {
-    CaretRightOutlined,
-    CloudDownloadOutlined,
-    HeartFilled,
-    HeartOutlined,
-    SearchOutlined,
-    SortAscendingOutlined,
-    SortDescendingOutlined,
+  CaretRightOutlined,
+  CloseOutlined,
+  CloudDownloadOutlined,
+  HeartFilled,
+  HeartOutlined,
+  SearchOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined
 } from "@ant-design/icons";
 import {
-    getAlbumById,
-    getAlbumTracks,
-    toggleAlbumLike,
-    unlikeAlbum,
+  getAlbumById,
+  getAlbumTracks,
+  toggleAlbumLike,
+  unlikeAlbum,
 } from "@soundx/services";
 import { useRequest } from "ahooks";
-import { Avatar, Col, Flex, Input, Row, theme, Typography } from "antd";
+import { Avatar, Button, Col, Flex, Input, Row, Space, theme, Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMessage } from "../../context/MessageContext";
@@ -43,6 +44,8 @@ const Detail: React.FC = () => {
   const [keyword, setKeyword] = useState("");
   const [keywordMidValue, setKeywordMidValue] = useState("");
   const [isLiked, setIsLiked] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   const { token } = theme.useToken();
   const { play, setPlaylist } = usePlayerStore();
@@ -153,6 +156,22 @@ const Detail: React.FC = () => {
     }
   };
 
+  const handleDownloadSelected = () => {
+    const selectedTracks = tracks.filter((t) => selectedRowKeys.includes(t.id));
+    if (selectedTracks.length === 0) {
+      message.warning("请先选择要下载的曲目");
+      return;
+    }
+    message.info(`开始下载 ${selectedTracks.length} 首曲目`);
+    downloadTracks(selectedTracks, (completed: number, total: number) => {
+      if (completed === total) {
+        message.success(`${total} 首曲目下载完成`);
+        setIsSelectionMode(false);
+        setSelectedRowKeys([]);
+      }
+    });
+  };
+
   const handleRefresh = () => {
     // When a track is deleted or updated, we should refresh the list.
     // Ideally we re-fetch the current view.
@@ -237,18 +256,29 @@ const Detail: React.FC = () => {
                   <CloudDownloadOutlined 
                     className={styles.actionIcon} 
                     onClick={() => {
-                        if (tracks.length === 0) {
-                            message.warning("无可下载的曲目");
-                            return;
-                        }
-                        message.info(`开始下载专辑《${album?.name}》`);
-                        downloadTracks(tracks, (completed: number, total: number) => {
-                            if (completed === total) {
-                                message.success(`专辑《${album?.name || ''}》下载完成`);
-                            }
-                        });
+                        setIsSelectionMode(true);
                     }}
                   />
+                  {isSelectionMode && (
+                    <Space size={8} style={{ marginLeft: 16 }}>
+                      <Button 
+                        type="text" 
+                        size="small" 
+                        onClick={handleDownloadSelected}
+                      >
+                        点击下载已选中 ({selectedRowKeys.length})的曲目
+                      </Button>
+                      <Button 
+                        size="small" 
+                        type="text" 
+                        icon={<CloseOutlined />}
+                        onClick={() => {
+                          setIsSelectionMode(false);
+                          setSelectedRowKeys([]);
+                        }}
+                      />
+                    </Space>
+                  )}
                 </Typography.Text>
               </div>
 
@@ -287,6 +317,14 @@ const Detail: React.FC = () => {
               loading={loading}
               type={album?.type}
               onRefresh={handleRefresh}
+              rowSelection={
+                isSelectionMode
+                  ? {
+                      selectedRowKeys,
+                      onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+                    }
+                  : undefined
+              }
             />
           </Col>
         </Row>

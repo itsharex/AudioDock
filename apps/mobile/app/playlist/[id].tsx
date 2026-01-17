@@ -6,21 +6,25 @@ import { getBaseURL } from "@/src/https";
 import { Playlist } from "@/src/models";
 import { downloadTracks } from "@/src/services/downloadManager";
 import { Ionicons } from "@expo/vector-icons";
-import { deletePlaylist, getPlaylistById, updatePlaylist } from "@soundx/services";
+import {
+  deletePlaylist,
+  getPlaylistById,
+  updatePlaylist,
+} from "@soundx/services";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    ViewStyle,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -37,6 +41,8 @@ export default function PlaylistDetailScreen() {
   const [updating, setUpdating] = useState(false);
   const [trackMoreVisible, setTrackMoreVisible] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<number[]>([]);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -95,6 +101,47 @@ export default function PlaylistDetailScreen() {
     ]);
   };
 
+  const toggleTrackSelection = (trackId: number) => {
+    setSelectedTrackIds((prev) =>
+      prev.includes(trackId)
+        ? prev.filter((id) => id !== trackId)
+        : [...prev, trackId]
+    );
+  };
+
+  const handleDownloadSelected = () => {
+    const selectedTracks = tracks.filter((t) =>
+      selectedTrackIds.includes(t.id)
+    );
+    if (selectedTracks.length === 0) {
+      Alert.alert("提示", "请先选择要下载的曲目");
+      return;
+    }
+    Alert.alert(
+      "批量下载",
+      `确定要下载播放列表“${playlist?.name}”中的所有选择的${selectedTrackIds?.length}首曲目吗？`,
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "确定",
+          style: "destructive",
+          onPress: async () => {
+            downloadTracks(
+              selectedTracks,
+              (completed: number, total: number) => {
+                if (completed === total) {
+                  Alert.alert("下载完成", `已成功下载 ${total} 首曲目`);
+                  setIsSelectionMode(false);
+                  setSelectedTrackIds([]);
+                }
+              }
+            );
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View
@@ -148,29 +195,47 @@ export default function PlaylistDetailScreen() {
         ]}
       >
         <TouchableOpacity
-          onPress={() => router.back()}
           style={styles.backButton}
+          onPress={() =>
+            isSelectionMode ? setIsSelectionMode(false) : router.back()
+          }
         >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons
+            name={isSelectionMode ? "close" : "chevron-back"}
+            size={28}
+            color={colors.text}
+          />
         </TouchableOpacity>
-        
-        <View style={styles.headerTextContainer}>
-          <Text style={[styles.headerTitleText, { color: colors.text }]} numberOfLines={1}>
-            {playlist.name}
-          </Text>
-          <Text style={[styles.headerSubtitleText, { color: colors.secondary }]}>
-            {tracks.length} 首歌曲
-          </Text>
+        <Text
+          style={[styles.headerTitle, { color: colors.text }]}
+          numberOfLines={1}
+        >
+          {isSelectionMode
+            ? `已选择 ${selectedTrackIds.length} 项`
+            : playlist?.name || "Playlist"}
+        </Text>
+        <View style={styles.headerRight}>
+          {isSelectionMode ? (
+            <TouchableOpacity onPress={handleDownloadSelected}>
+              <Ionicons
+                name="cloud-download-outline"
+                size={24}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => setMoreModalVisible(true)}>
+              <Ionicons
+                name="ellipsis-horizontal"
+                size={24}
+                color={colors.text}
+              />
+            </TouchableOpacity>
+          )}
         </View>
-
-        <TouchableOpacity
-          onPress={() => setMoreModalVisible(true)}
-          style={styles.moreButton}
-        >
-          <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
-        </TouchableOpacity>
       </View>
-      <ScrollView>
+
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Photo Wall - Staggered Grid */}
         <View style={styles.photoWall}>
           {uniqueAlbums.map((album, index) => {
@@ -181,7 +246,10 @@ export default function PlaylistDetailScreen() {
             };
 
             return (
-              <View key={index} style={[styles.photoWallItem, itemStyle as ViewStyle]}>
+              <View
+                key={index}
+                style={[styles.photoWallItem, itemStyle as ViewStyle]}
+              >
                 <Image
                   source={{
                     uri: album.cover
@@ -203,18 +271,47 @@ export default function PlaylistDetailScreen() {
               key={track.id}
               style={[styles.trackItem, { borderBottomColor: colors.border }]}
               onPress={() => {
+                if (isSelectionMode) {
+                  toggleTrackSelection(track.id);
+                  return;
+                }
                 playTrackList(tracks, index);
               }}
               onLongPress={() => {
+                if (isSelectionMode) return;
                 setSelectedTrack(track);
                 setTrackMoreVisible(true);
               }}
             >
               <View style={styles.trackIndexContainer}>
-                {currentTrack?.id === track.id && isPlaying ? (
+                {isSelectionMode ? (
+                  <Ionicons
+                    name={
+                      selectedTrackIds.includes(track.id)
+                        ? "checkbox"
+                        : "square-outline"
+                    }
+                    size={20}
+                    color={
+                      selectedTrackIds.includes(track.id)
+                        ? colors.primary
+                        : colors.secondary
+                    }
+                  />
+                ) : currentTrack?.id === track.id && isPlaying ? (
                   <PlayingIndicator />
                 ) : (
-                  <Text style={[styles.trackIndex, { color: currentTrack?.id === track.id ? colors.primary : colors.secondary }]}>
+                  <Text
+                    style={[
+                      styles.trackIndex,
+                      {
+                        color:
+                          currentTrack?.id === track.id
+                            ? colors.primary
+                            : colors.secondary,
+                      },
+                    ]}
+                  >
                     {index + 1}
                   </Text>
                 )}
@@ -278,24 +375,43 @@ export default function PlaylistDetailScreen() {
         >
           <View style={[styles.menuContent, { backgroundColor: colors.card }]}>
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[
+                styles.menuItem,
+                {
+                  backgroundColor: colors.primary,
+                  borderRadius: 10,
+                  paddingHorizontal: 15,
+                  marginBottom: 10,
+                },
+              ]}
               onPress={() => {
                 setMoreModalVisible(false);
                 if (tracks.length === 0) return;
-                Alert.alert("批量下载", `确定要下载播放列表“${playlist.name}”中的所有曲目吗？`, [
-                  { text: "取消", style: "cancel" },
-                  { text: "确定", onPress: () => {
-                    downloadTracks(tracks, (completed: number, total: number) => {
-                      if (completed === total) {
-                        Alert.alert("下载完成", `播放列表“${playlist.name}”下载完成`);
-                      }
-                    });
-                  }}
-                ]);
+                playTrackList(tracks, 0);
               }}
             >
-              <Ionicons name="cloud-download-outline" size={20} color={colors.text} />
-              <Text style={[styles.menuText, { color: colors.text }]}>批量下载</Text>
+              <Ionicons name="play" size={20} color={colors.background} />
+              <Text style={[styles.playAllText, { color: colors.background }]}>
+                播放全部
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.menuItem]}
+              onPress={() => {
+                setMoreModalVisible(false);
+                setIsSelectionMode(true);
+                setSelectedTrackIds([]);
+              }}
+            >
+              <Ionicons
+                name="cloud-download-outline"
+                size={24}
+                color={colors.secondary}
+              />
+              <Text style={[styles.menuText, { color: colors.text }]}>
+                批量下载
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -307,22 +423,28 @@ export default function PlaylistDetailScreen() {
               }}
             >
               <Ionicons name="create-outline" size={20} color={colors.text} />
-              <Text style={[styles.menuText, { color: colors.text }]}>修改名称</Text>
+              <Text style={[styles.menuText, { color: colors.text }]}>
+                修改名称
+              </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleDelete}
-            >
+
+            <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
               <Ionicons name="trash-outline" size={20} color="#ff4d4f" />
-              <Text style={[styles.menuText, styles.dangerText]}>解散播放列表</Text>
+              <Text style={[styles.menuText, styles.dangerText]}>
+                解散播放列表
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.menuItem, { marginTop: 10, justifyContent: 'center' }]}
+              style={[
+                styles.menuItem,
+                { marginTop: 10, justifyContent: "center" },
+              ]}
               onPress={() => setMoreModalVisible(false)}
             >
-              <Text style={[styles.menuText, { color: colors.secondary }]}>取消</Text>
+              <Text style={[styles.menuText, { color: colors.secondary }]}>
+                取消
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -336,9 +458,14 @@ export default function PlaylistDetailScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>修改播放列表名称</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              修改播放列表名称
+            </Text>
             <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                { color: colors.text, borderColor: colors.border },
+              ]}
               value={newName}
               onChangeText={setNewName}
               autoFocus
@@ -356,9 +483,17 @@ export default function PlaylistDetailScreen() {
                 disabled={updating || !newName.trim()}
               >
                 {updating ? (
-                  <ActivityIndicator size="small" color={theme === 'dark' ? '#000' : '#fff'} />
+                  <ActivityIndicator
+                    size="small"
+                    color={theme === "dark" ? "#000" : "#fff"}
+                  />
                 ) : (
-                  <Text style={[styles.confirmText, { color: theme === 'dark' ? '#000' : '#fff' }]}>
+                  <Text
+                    style={[
+                      styles.confirmText,
+                      { color: theme === "dark" ? "#000" : "#fff" },
+                    ]}
+                  >
                     确定
                   </Text>
                 )}
@@ -401,7 +536,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 5,
-    width: 40,
   },
   title: {
     fontSize: 24,
@@ -443,12 +577,12 @@ const styles = StyleSheet.create({
   },
   trackIndex: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   trackIndexContainer: {
     width: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   trackInfo: {
     flex: 1,
@@ -464,6 +598,30 @@ const styles = StyleSheet.create({
   trackDuration: {
     fontSize: 12,
   },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 10,
+  },
+  headerRight: {
+    width: 28,
+    alignItems: "center",
+  },
+  playAllText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
+  actionButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 15,
+  },
   moreButton: {
     padding: 5,
     width: 40,
@@ -473,14 +631,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "flex-end",
-    alignItems: 'center',
+    alignItems: "center",
   },
   menuContent: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
     paddingBottom: 40,
-    width: '100%',
+    width: "100%",
     maxWidth: 450,
   },
   menuItem: {

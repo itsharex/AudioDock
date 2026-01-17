@@ -23,6 +23,7 @@ interface AlbumMoreModalProps {
   tracks: Track[];
   onClose: () => void;
   onAddToPlaylist: () => void;
+  onSelectTracks?: () => void;
 }
 
 export const AlbumMoreModal: React.FC<AlbumMoreModalProps> = ({
@@ -32,6 +33,7 @@ export const AlbumMoreModal: React.FC<AlbumMoreModalProps> = ({
   tracks,
   onClose,
   onAddToPlaylist,
+  onSelectTracks,
 }) => {
   const { colors } = useTheme();
   const { user } = useAuth();
@@ -89,6 +91,17 @@ export const AlbumMoreModal: React.FC<AlbumMoreModalProps> = ({
             <TouchableOpacity style={styles.option} onPress={handleCreatePlaylistWithAlbum}>
               <Ionicons name="duplicate-outline" size={24} color={colors.text} />
               <Text style={[styles.optionText, { color: colors.text }]}>新建与专辑同名播放列表</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.option} 
+              onPress={() => {
+                onClose();
+                onSelectTracks?.();
+              }}
+            >
+              <Ionicons name="list-outline" size={24} color={colors.text} />
+              <Text style={[styles.optionText, { color: colors.text }]}>选择歌曲</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 

@@ -10,22 +10,22 @@ import { Album, Track } from "@/src/models";
 import { downloadTracks } from "@/src/services/downloadManager";
 import { Ionicons } from "@expo/vector-icons";
 import {
-    getAlbumById,
-    getAlbumTracks,
-    toggleAlbumLike,
-    unlikeAlbum,
+  getAlbumById,
+  getAlbumTracks,
+  toggleAlbumLike,
+  unlikeAlbum,
 } from "@soundx/services";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function AlbumDetailScreen() {
@@ -46,6 +46,8 @@ export default function AlbumDetailScreen() {
   const [moreModalVisible, setMoreModalVisible] = useState(false);
   const [albumMoreVisible, setAlbumMoreVisible] = useState(false);
   const [addToPlaylistVisible, setAddToPlaylistVisible] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<number[]>([]);
 
   const PAGE_SIZE = 50;
 
@@ -116,6 +118,59 @@ export default function AlbumDetailScreen() {
     }
   };
 
+  const toggleTrackSelection = (trackId: number) => {
+    setSelectedTrackIds((prev) =>
+      prev.includes(trackId)
+        ? prev.filter((id) => id !== trackId)
+        : [...prev, trackId]
+    );
+  };
+
+  const handleDownloadSelected = () => {
+    const selectedTracks = tracks.filter((t) =>
+      selectedTrackIds.includes(t.id)
+    );
+    if (selectedTracks.length === 0) {
+      Alert.alert("提示", "请先选择要下载的曲目");
+      return;
+    }
+    Alert.alert(
+      "批量下载",
+      `确定要下载专辑《${album?.name}》中的所有选择的${selectedTrackIds?.length}首曲目吗？`,
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "确定",
+          onPress: () => {
+            downloadTracks(
+              selectedTracks,
+              (completed: number, total: number) => {
+                if (completed === total) {
+                  Alert.alert("下载完成", `已成功下载 ${total} 首曲目`);
+                  setIsSelectionMode(false);
+                  setSelectedTrackIds([]);
+                }
+              }
+            );
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.background, justifyContent: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   if (loading) {
     return (
       <View
@@ -148,17 +203,47 @@ export default function AlbumDetailScreen() {
         style={[styles.customHeader, { backgroundColor: colors.background }]}
       >
         <TouchableOpacity
-          onPress={() => router.back()}
           style={styles.backButton}
+          onPress={() =>
+            isSelectionMode ? setIsSelectionMode(false) : router.back()
+          }
         >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons
+            name={isSelectionMode ? "close" : "chevron-back"}
+            size={28}
+            color={colors.text}
+          />
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setAlbumMoreVisible(true)}
-          style={styles.moreButton}
+        <Text
+          style={[styles.headerTitle, { color: colors.text }]}
+          numberOfLines={1}
         >
-          <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
-        </TouchableOpacity>
+          {isSelectionMode
+            ? `已选择 ${selectedTrackIds.length} 项`
+            : album?.name || "Album"}
+        </Text>
+        <View style={styles.headerRight}>
+          {isSelectionMode ? (
+            <TouchableOpacity
+              disabled={!selectedTrackIds.length}
+              onPress={handleDownloadSelected}
+            >
+              <Ionicons
+                name="cloud-download-outline"
+                size={24}
+                color={selectedTrackIds.length ? colors.text : colors.secondary}
+              />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => setAlbumMoreVisible(true)}>
+              <Ionicons
+                name="ellipsis-horizontal"
+                size={24}
+                color={colors.text}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <FlatList
         data={tracks}
@@ -228,28 +313,38 @@ export default function AlbumDetailScreen() {
                   color={isLiked ? colors.primary : colors.secondary}
                 />
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.likeButton, { backgroundColor: colors.card }]}
-                onPress={() => {
-                   if (tracks.length === 0) return;
-                   Alert.alert("批量下载", `确定要下载专辑《${album.name}》中的所有曲目吗？`, [
-                     { text: "取消", style: "cancel" },
-                     { text: "确定", onPress: () => {
-                        downloadTracks(tracks, (completed: number, total: number) => {
-                          if (completed === total) {
-                            Alert.alert("下载完成", `专辑《${album.name}》下载完成`);
-                          }
-                        });
-                     }}
-                   ]);
-                }}
-              >
-                <Ionicons
-                  name="cloud-download-outline"
-                  size={24}
-                  color={colors.secondary}
-                />
-              </TouchableOpacity>
+              {!isSelectionMode ? (
+                <TouchableOpacity
+                  style={[styles.likeButton, { backgroundColor: colors.card }]}
+                  onPress={() => {
+                    setIsSelectionMode(true);
+                    setSelectedTrackIds([]);
+                  }}
+                >
+                  <Ionicons
+                    name="cloud-download-outline"
+                    size={24}
+                    color={colors.secondary}
+                  />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.likeButton, { backgroundColor: colors.card }]}
+                  onPress={() => {
+                    if (selectedTrackIds?.length === tracks.length) {
+                      setSelectedTrackIds([]);
+                    } else {
+                      setSelectedTrackIds(tracks.map((t) => t.id));
+                    }
+                  }}
+                >
+                  <Ionicons
+                    name="list-outline"
+                    size={24}
+                    color={colors.secondary}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         }
@@ -257,6 +352,10 @@ export default function AlbumDetailScreen() {
           <TouchableOpacity
             style={[styles.trackItem, { borderBottomColor: colors.border }]}
             onPress={() => {
+              if (isSelectionMode) {
+                toggleTrackSelection(item.id);
+                return;
+              }
               playTrackList(tracks, index);
               // If Audiobook and has progress, try to resume
               if (
@@ -273,12 +372,27 @@ export default function AlbumDetailScreen() {
               }
             }}
             onLongPress={() => {
+              if (isSelectionMode) return;
               setSelectedTrack(item);
               setMoreModalVisible(true);
             }}
           >
             <View style={styles.trackIndexContainer}>
-              {currentTrack?.id === item.id && isPlaying ? (
+              {isSelectionMode ? (
+                <Ionicons
+                  name={
+                    selectedTrackIds.includes(item.id)
+                      ? "checkbox"
+                      : "square-outline"
+                  }
+                  size={20}
+                  color={
+                    selectedTrackIds.includes(item.id)
+                      ? colors.primary
+                      : colors.secondary
+                  }
+                />
+              ) : currentTrack?.id === item.id && isPlaying ? (
                 <PlayingIndicator />
               ) : (
                 <Text
@@ -395,6 +509,10 @@ export default function AlbumDetailScreen() {
           setSelectedTrack(null);
           setAddToPlaylistVisible(true);
         }}
+        onSelectTracks={() => {
+          setIsSelectionMode(true);
+          setSelectedTrackIds([]);
+        }}
       />
     </View>
   );
@@ -419,6 +537,17 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 5,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 10,
+  },
+  headerRight: {
+    width: 28, // Matches backButton size roughly for centering title
+    alignItems: "center",
   },
   moreButton: {
     padding: 5,

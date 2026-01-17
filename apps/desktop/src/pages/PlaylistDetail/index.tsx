@@ -1,39 +1,42 @@
 import {
-    CaretRightOutlined,
-    CloudDownloadOutlined,
-    DeleteOutlined,
-    EditOutlined,
-    MoreOutlined,
-    PauseCircleFilled,
-    PlayCircleFilled,
-    PlusOutlined,
-    SearchOutlined,
-    SortAscendingOutlined,
-    SortDescendingOutlined
+  CaretRightOutlined,
+  CloseOutlined,
+  CloudDownloadOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  MoreOutlined,
+  PauseCircleFilled,
+  PlayCircleFilled,
+  PlusOutlined,
+  SearchOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined,
 } from "@ant-design/icons";
 import {
-    addTrackToPlaylist,
-    deletePlaylist,
-    getPlaylistById,
-    getPlaylists,
-    removeTrackFromPlaylist,
-    updatePlaylist,
-    type Playlist,
+  addTrackToPlaylist,
+  deletePlaylist,
+  getPlaylistById,
+  getPlaylists,
+  removeTrackFromPlaylist,
+  updatePlaylist,
+  type Playlist,
 } from "@soundx/services";
 import {
-    Col,
-    Dropdown,
-    Flex,
-    Form,
-    Input,
-    List,
-    Modal,
-    Popconfirm,
-    Row,
-    Table,
-    theme,
-    Typography,
-    type MenuProps,
+  Button,
+  Col,
+  Dropdown,
+  Flex,
+  Form,
+  Input,
+  List,
+  Modal,
+  Popconfirm,
+  Row,
+  Space,
+  Table,
+  theme,
+  Typography,
+  type MenuProps
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -70,6 +73,8 @@ const PlaylistDetail: React.FC = () => {
   // Search and Sort state (to match Detail UI, though maybe client-side for now)
   const [keyword, setKeyword] = useState("");
   const [keywordMidValue, setKeywordMidValue] = useState("");
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [sort, setSort] = useState<"asc" | "desc">("asc");
 
   const [modalApi, modalContextHolder] = Modal.useModal();
@@ -107,8 +112,25 @@ const PlaylistDetail: React.FC = () => {
   const handlePlayAll = () => {
     if (playlist?.tracks && playlist.tracks.length > 0) {
       setPlayerPlaylist(playlist.tracks);
-      play(playlist.tracks[0], -1);
+      play(playlist.tracks[0], playlist.id);
     }
+  };
+
+  const handleDownloadSelected = () => {
+    if (!playlist?.tracks) return;
+    const selectedTracks = playlist.tracks.filter((t) => selectedRowKeys.includes(t.id));
+    if (selectedTracks.length === 0) {
+        message.warning("请先选择要下载的曲目");
+        return;
+    }
+    message.info(`开始下载 ${selectedTracks.length} 首曲目`);
+    downloadTracks(selectedTracks, (completed: number, total: number) => {
+        if (completed === total) {
+            message.success(`${total} 首曲目下载完成`);
+            setIsSelectionMode(false);
+            setSelectedRowKeys([]);
+        }
+    });
   };
 
   const handlePlayTrack = (track: Track) => {
@@ -426,18 +448,31 @@ const PlaylistDetail: React.FC = () => {
                   <CloudDownloadOutlined 
                     className={styles.actionIcon} 
                     onClick={() => {
-                        if (!playlist?.tracks || playlist.tracks.length === 0) {
-                            message.warning("无可下载的曲目");
-                            return;
-                        }
-                        message.info(`开始下载播放列表《${playlist?.name}》`);
-                        downloadTracks(playlist.tracks, (completed: number, total: number) => {
-                            if (completed === total) {
-                                message.success(`播放列表《${playlist?.name || ''}》下载完成`);
-                            }
-                        });
+                        setIsSelectionMode(true);
                     }}
                   />
+                  {isSelectionMode && (
+                    <Space size={8} style={{ marginLeft: 16 }}>
+                      <Button 
+                        type="text" 
+                        size="small" 
+                        onClick={handleDownloadSelected}
+                      >
+                        点击下载已选中的 ({selectedRowKeys.length})首曲目
+                      </Button>
+                      <Button 
+                        size="small" 
+                        type="text" 
+                        icon={<CloseOutlined />}
+                        onClick={() => {
+                          setIsSelectionMode(false);
+                          setSelectedRowKeys([]);
+                        }}
+                      >
+                        取消
+                      </Button>
+                    </Space>
+                  )}
                 </div>
               </div>
 
@@ -483,6 +518,14 @@ const PlaylistDetail: React.FC = () => {
                 onClick: () => handlePlayTrack(record),
                 style: { cursor: "pointer" },
               })}
+              rowSelection={
+                isSelectionMode
+                  ? {
+                      selectedRowKeys,
+                      onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+                    }
+                  : undefined
+              }
             />
           </Col>
         </Row>

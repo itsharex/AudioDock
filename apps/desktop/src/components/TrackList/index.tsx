@@ -51,6 +51,7 @@ export interface TrackListProps {
   showDuration?: boolean;
   onPlay?: (track: Track, tracks: Track[]) => void;
   onRefresh?: () => void; // Called after delete/like etc if needed
+  rowSelection?: any; // Ant Design Table rowSelection
 }
 
 const TrackList: React.FC<TrackListProps> = ({
@@ -65,6 +66,7 @@ const TrackList: React.FC<TrackListProps> = ({
   showDuration = true,
   onPlay,
   onRefresh,
+  rowSelection,
 }) => {
   const message = useMessage();
   const { user } = useAuthStore();
@@ -419,6 +421,7 @@ const TrackList: React.FC<TrackListProps> = ({
         pagination={false}
         rowKey="id"
         loading={loading}
+        rowSelection={rowSelection}
         rowClassName={styles.listCover}
         onRow={(record) => ({
           onClick: () => handlePlayTrack(record),
