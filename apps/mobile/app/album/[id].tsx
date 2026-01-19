@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     left: 3,
     right: 3,
     height: 4,
-    width: 120 - 6,
+    width: 200 - 6,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   progressBar: {
