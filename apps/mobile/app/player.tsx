@@ -10,7 +10,19 @@ import { Slider } from "@miblanchard/react-native-slider";
 import { toggleLike, toggleUnLike } from "@soundx/services";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  FlatList,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlayerMoreModal } from "../src/components/PlayerMoreModal";
 import { PlaylistModal } from "../src/components/PlaylistModal";
@@ -226,7 +238,11 @@ export default function PlayerScreen() {
       ? currentTrack?.type !== TrackType.AUDIOBOOK
       : showLyrics;
 
-    if (!shouldShowLyrics || !currentTrack?.lyrics || lyricContainerHeight === 0)
+    if (
+      !shouldShowLyrics ||
+      !currentTrack?.lyrics ||
+      lyricContainerHeight === 0
+    )
       return;
 
     const lyrics = parseLyrics(currentTrack.lyrics);
@@ -369,7 +385,15 @@ export default function PlayerScreen() {
                 styles.playlistItemText,
                 {
                   color:
-                    currentTrack?.id === item.id ? colors.primary : colors.text,
+                    currentTrack?.id === item.id
+                      ? colors.primary
+                      : currentTrack?.type === TrackType.AUDIOBOOK &&
+                          ((item as any).progress > 0 ||
+                            (item.listenedAsAudiobookByUsers &&
+                              item.listenedAsAudiobookByUsers[0] &&
+                              item.listenedAsAudiobookByUsers[0].progress > 0))
+                        ? colors.secondary
+                        : colors.text,
                 },
               ]}
               numberOfLines={1}
@@ -377,22 +401,28 @@ export default function PlayerScreen() {
               {item.name}
             </Text>
             {currentTrack?.type === TrackType.AUDIOBOOK &&
-              (item as any).progress > 0 && (
-                <Text
-                  style={{
-                    fontSize: 10,
-                    color: colors.secondary,
-                    marginTop: 2,
-                  }}
-                >
-                  已听{" "}
-                  {Math.floor(
-                    (((item as any).progress || 0) / (item.duration || 1)) *
-                      100,
-                  )}
-                  %
-                </Text>
-              )}
+              (() => {
+                const displayProgress =
+                  currentTrack?.id === item.id
+                    ? position
+                    : (item as any).progress ||
+                      item.listenedAsAudiobookByUsers?.[0]?.progress ||
+                      0;
+                if (displayProgress <= 0) return null;
+                return (
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      color: colors.secondary,
+                      marginTop: 2,
+                    }}
+                  >
+                    已听{" "}
+                    {Math.floor((displayProgress / (item.duration || 1)) * 100)}
+                    %
+                  </Text>
+                );
+              })()}
           </View>
         </TouchableOpacity>
       )}

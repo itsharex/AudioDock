@@ -64,7 +64,7 @@ export const FolderMoreModal: React.FC<FolderMoreModalProps> = ({
     <Modal
       visible={visible}
       transparent={true}
-      animationType="fade"
+      animationType="slide"
       onRequestClose={onClose}
     >
       <TouchableOpacity

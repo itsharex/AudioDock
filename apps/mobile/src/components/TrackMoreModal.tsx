@@ -62,7 +62,7 @@ export const TrackMoreModal: React.FC<TrackMoreModalProps> = ({
     <Modal
       visible={visible}
       transparent={true}
-      animationType="fade"
+      animationType="slide"
       onRequestClose={onClose}
     >
       <TouchableOpacity

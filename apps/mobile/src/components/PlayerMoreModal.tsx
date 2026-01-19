@@ -185,7 +185,7 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
       <Modal
         visible={visible}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={onClose}
       >
         <Pressable style={styles.backdrop} onPress={onClose}>

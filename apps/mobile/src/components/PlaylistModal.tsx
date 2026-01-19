@@ -39,6 +39,7 @@ export const PlaylistModal = () => {
     setShowPlaylist,
     playTrack,
     isPlaying,
+    position,
   } = usePlayer();
 
   const [activeTab, setActiveTab] = useState<TabType>("current");
@@ -147,7 +148,7 @@ export const PlaylistModal = () => {
           <Text
             style={[
               styles.modalItemText,
-              { color: isActive ? colors.primary : colors.text },
+              { color: isActive ? colors.primary : ((currentTrack?.type === TrackType.AUDIOBOOK || mode === "AUDIOBOOK") && ((item as any).progress > 0 || (item.listenedAsAudiobookByUsers && item.listenedAsAudiobookByUsers[0] && item.listenedAsAudiobookByUsers[0].progress > 0))) ? colors.secondary : colors.text },
               { flex: 1 },
             ]}
             numberOfLines={1}
@@ -164,14 +165,16 @@ export const PlaylistModal = () => {
               color={colors.secondary}
             />
           )}
-          {(currentTrack?.type === TrackType.AUDIOBOOK || mode === "AUDIOBOOK") &&
-          (item as any).progress &&
-          !isAlbum ? (
-            <Text style={[styles.progressText, { color: colors.secondary }]}>
-              已听
-              {Math.floor(((item as any).progress / (item.duration || 1)) * 100)}%
-            </Text>
-          ) : null}
+          {(currentTrack?.type === TrackType.AUDIOBOOK || mode === "AUDIOBOOK") && !isAlbum && (() => {
+            const displayProgress = isActive ? position : ((item as any).progress || item.listenedAsAudiobookByUsers?.[0]?.progress || 0);
+            if (displayProgress <= 0) return null;
+            return (
+              <Text style={[styles.progressText, { color: colors.secondary }]}>
+                已听
+                {Math.floor((displayProgress / (item.duration || 1)) * 100)}%
+              </Text>
+            );
+          })()}
         </View>
       </TouchableOpacity>
     );
@@ -181,7 +184,7 @@ export const PlaylistModal = () => {
     <Modal
       visible={showPlaylist}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={() => setShowPlaylist(false)}
     >
       <Pressable style={styles.backdrop} onPress={() => setShowPlaylist(false)}>

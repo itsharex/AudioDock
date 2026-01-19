@@ -32,7 +32,7 @@ export default function AlbumDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { colors } = useTheme();
-  const { playTrack, playTrackList, currentTrack, isPlaying, seekTo } =
+  const { playTrack, playTrackList, currentTrack, isPlaying, seekTo, position } =
     usePlayer();
   const { user } = useAuth();
   const [album, setAlbum] = useState<Album | null>(null);
@@ -437,23 +437,21 @@ export default function AlbumDetailScreen() {
                 {item.name}
               </Text>
             </View>
-            {album.type === "AUDIOBOOK" &&
-            ((item as any).progress > 0 ||
-              item.listenedAsAudiobookByUsers?.[0]?.progress) ? (
-              <View style={{ marginRight: 10 }}>
-                <Text style={{ fontSize: 10, color: colors.primary }}>
-                  已听
-                  {Math.floor(
-                    (((item as any).progress ||
-                      item.listenedAsAudiobookByUsers?.[0]?.progress ||
-                      0) /
-                      (item.duration || 1)) *
-                      100
-                  )}
-                  %
-                </Text>
-              </View>
-            ) : null}
+            {album.type === "AUDIOBOOK" && (() => {
+              const displayProgress = currentTrack?.id === item.id ? position : ((item as any).progress || item.listenedAsAudiobookByUsers?.[0]?.progress || 0);
+              if (displayProgress <= 0) return null;
+              return (
+                <View style={{ marginRight: 10 }}>
+                  <Text style={{ fontSize: 10, color: colors.primary }}>
+                    已听
+                    {Math.floor(
+                      (displayProgress / (item.duration || 1)) * 100
+                    )}
+                    %
+                  </Text>
+                </View>
+              );
+            })()}
             <Text style={[styles.trackDuration, { color: colors.secondary }]}>
               {item.duration
                 ? `${Math.floor(item.duration / 60)}:${(item.duration % 60)
