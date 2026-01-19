@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isCached } from "../services/cache";
 import { downloadTrack } from "../services/downloadManager";
 import { AddToPlaylistModal } from "./AddToPlaylistModal";
+import { LyricsFontSizeModal } from "./LyricsFontSizeModal";
 import SleepTimerModal from "./SleepTimerModal";
 
 interface PlayerMoreModalProps {
@@ -25,6 +26,8 @@ interface PlayerMoreModalProps {
   onClose: () => void;
   currentTrack: Track | null;
   router: Router;
+  lyricFontSize: number;
+  setLyricFontSize: (size: number) => void;
 }
 
 export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
@@ -33,6 +36,8 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
   onClose,
   currentTrack,
   router,
+  lyricFontSize,
+  setLyricFontSize,
 }) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -42,6 +47,7 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
   const [remainingTime, setRemainingTime] = useState<string>("");
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [lyricsSizeVisible, setLyricsSizeVisible] = useState(false);
 
   // Calculate remaining time
   useEffect(() => {
@@ -178,6 +184,16 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
       disabled: isDownloaded || isDownloading,
       isMaterialIcon: false,
     },
+    {
+      icon: "text-outline" as const,
+      label: "调节歌词大小",
+      onPress: () => {
+        setVisible(false);
+        setLyricsSizeVisible(true);
+      },
+      disabled: false,
+      isMaterialIcon: false,
+    },
   ];
 
   return (
@@ -295,6 +311,14 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
         visible={addToPlaylistVisible}
         trackId={currentTrack?.id ?? null}
         onClose={() => setAddToPlaylistVisible(false)}
+      />
+
+      <LyricsFontSizeModal
+        visible={lyricsSizeVisible}
+        onClose={() => setLyricsSizeVisible(false)}
+        lyricFontSize={lyricFontSize}
+        setLyricFontSize={setLyricFontSize}
+        previewLyrics={currentTrack?.lyrics || ""}
       />
     </>
   );

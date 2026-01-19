@@ -108,7 +108,7 @@ export default function ArtistDetailScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
       <ScrollView>
