@@ -11,13 +11,13 @@ import { getAlbumsByArtist, getArtistById, getCollaborativeAlbumsByArtist, getTr
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function ArtistDetailScreen() {
@@ -121,10 +121,10 @@ export default function ArtistDetailScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text, paddingHorizontal: 20 }]}>
             所有专辑 ({albums.length})
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
             {albums.map((album) => (
               <TouchableOpacity
                 key={album.id}
@@ -152,10 +152,10 @@ export default function ArtistDetailScreen() {
 
         {collaborativeAlbums.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text, paddingHorizontal: 20 }]}>
               合作专辑 ({collaborativeAlbums.length})
             </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
               {collaborativeAlbums.map((album) => (
                 <TouchableOpacity
                   key={album.id}
@@ -295,11 +295,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   section: {
-    padding: 20,
+    padding: 0,
   },
   trackList: {
     marginBottom: 60,
     paddingBottom: 70,
+    paddingHorizontal: 20,
   },
   sectionTitle: {
     fontSize: 20,
