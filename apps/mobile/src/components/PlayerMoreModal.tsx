@@ -5,14 +5,17 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { isCached } from "../services/cache";
+import { downloadTrack } from "../services/downloadManager";
 import { AddToPlaylistModal } from "./AddToPlaylistModal";
 import SleepTimerModal from "./SleepTimerModal";
 
@@ -37,6 +40,8 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
   const [addToPlaylistVisible, setAddToPlaylistVisible] = useState(false);
   const { sleepTimer, position, seekTo, playbackRate, setPlaybackRate } = usePlayer();
   const [remainingTime, setRemainingTime] = useState<string>("");
+  const [isDownloaded, setIsDownloaded] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Calculate remaining time
   useEffect(() => {
@@ -65,6 +70,16 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
     return () => clearInterval(interval);
   }, [sleepTimer]);
 
+  useEffect(() => {
+    const checkCacheStatus = async () => {
+      if (visible && currentTrack) {
+        const cachedPath = await isCached(currentTrack.id, currentTrack.path);
+        setIsDownloaded(!!cachedPath);
+      }
+    };
+    checkCacheStatus();
+  }, [visible, currentTrack]);
+
   const handleArtistDetails = () => {
     setVisible(false);
     if (currentTrack?.artistId) {
@@ -87,8 +102,23 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
     setSleepTimerVisible(true);
   };
 
-  const handleDownload = () => {
-    // Placeholder - not implemented yet
+  const handleDownload = async () => {
+    if (!currentTrack || isDownloaded || isDownloading) return;
+    
+    setIsDownloading(true);
+    try {
+      const success = await downloadTrack(currentTrack);
+      if (success) {
+        setIsDownloaded(true);
+        Alert.alert("下载完成", `曲目《${currentTrack.name}》已成功下载到本地`);
+      } else {
+        Alert.alert("下载失败", "请检查网络连接或稍后重试");
+      }
+    } catch (error) {
+      console.error("Failed to download track", error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleSkipBackward = () => {
@@ -142,10 +172,10 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
       isMaterialIcon: false,
     },
     {
-      icon: "download-outline" as const,
-      label: "下载",
+      icon: isDownloaded ? ("cloud-done" as const) : ("cloud-download-outline" as const),
+      label: isDownloading ? "正在下载..." : isDownloaded ? "已下载" : "下载",
       onPress: handleDownload,
-      disabled: true,
+      disabled: isDownloaded || isDownloading,
       isMaterialIcon: false,
     },
   ];
