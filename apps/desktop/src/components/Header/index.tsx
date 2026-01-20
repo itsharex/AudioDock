@@ -1,5 +1,6 @@
 import {
   CustomerServiceOutlined,
+  DatabaseOutlined,
   DeleteOutlined,
   GithubOutlined,
   ImportOutlined,
@@ -14,7 +15,7 @@ import {
   SearchOutlined,
   SettingOutlined,
   SkinOutlined,
-  SunOutlined,
+  SunOutlined
 } from "@ant-design/icons";
 import {
   addSearchRecord,
@@ -30,7 +31,16 @@ import {
   type ImportTask,
   type SearchResults as SearchResultsType,
 } from "@soundx/services";
-import { Flex, Input, Modal, Popover, Progress, theme, Tooltip } from "antd";
+import {
+  Button,
+  Flex,
+  Input,
+  Modal,
+  Popover,
+  Progress,
+  theme,
+  Tooltip,
+} from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useMessage } from "../../context/MessageContext";
@@ -54,13 +64,15 @@ const Header: React.FC = () => {
   // Search state
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResultsType | null>(
-    null
+    null,
   );
   const [showResults, setShowResults] = useState(false);
   const searchTimerRef = useRef<number | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [hotSearches, setHotSearches] = useState<{ keyword: string; count: number }[]>([]);
+  const [hotSearches, setHotSearches] = useState<
+    { keyword: string; count: number }[]
+  >([]);
 
   // Mode state: 'music' | 'audiobook'
   const { mode: playMode, setMode: setPlayMode } = usePlayMode();
@@ -74,7 +86,7 @@ const Header: React.FC = () => {
     try {
       const [historyRes, hotRes] = await Promise.all([
         getSearchHistory(),
-        getHotSearches()
+        getHotSearches(),
       ]);
       if (historyRes.code === 200) setSearchHistory(historyRes.data);
       if (hotRes.code === 200) setHotSearches(hotRes.data);
@@ -150,7 +162,7 @@ const Header: React.FC = () => {
 
   const handleUpdateLibrary = async (mode: "incremental" | "full") => {
     message.loading(
-      `${mode === "incremental" ? "增量" : "全量"}更新任务创建中...`
+      `${mode === "incremental" ? "增量" : "全量"}更新任务创建中...`,
     );
 
     try {
@@ -313,8 +325,8 @@ const Header: React.FC = () => {
           }}
         />
         {showResults && (
-          <SearchResults 
-            results={searchResults} 
+          <SearchResults
+            results={searchResults}
             onClose={handleCloseSearch}
             history={searchHistory}
             hotSearches={hotSearches}
@@ -362,8 +374,8 @@ const Header: React.FC = () => {
             themeSetting === "dark"
               ? "切换至亮色模式"
               : themeSetting === "light"
-              ? "切换至跟随系统"
-              : "切换至暗色模式"
+                ? "切换至跟随系统"
+                : "切换至暗色模式"
           }
         >
           <div
@@ -380,6 +392,46 @@ const Header: React.FC = () => {
             )}
           </div>
         </Tooltip>
+        <Tooltip title="切换服务端">
+          <div
+            className={styles.actionIcon}
+            style={actionIconStyle}
+            onClick={() => {
+              const history = localStorage.getItem("serverHistory");
+              const serverHistory = history ? JSON.parse(history) : [];
+
+              modal.confirm({
+                title: "切换服务端",
+                content: (
+                  <Flex vertical gap={8} style={{ marginTop: 16 }}>
+                    {serverHistory.map((item: any) => (
+                      <Button
+                        key={item.value}
+                        onClick={() => {
+                          useAuthStore.getState().switchServer(item.value);
+                          Modal.destroyAll();
+                          message.success(`已切换至 ${item.value}`);
+                          window.location.reload();
+                        }}
+                        type={
+                          localStorage.getItem("serverAddress") === item.value
+                            ? "primary"
+                            : "default"
+                        }
+                      >
+                        {item.value}
+                      </Button>
+                    ))}
+                  </Flex>
+                ),
+                footer: null,
+                closable: true,
+              });
+            }}
+          >
+            <DatabaseOutlined />
+          </div>
+        </Tooltip>
         <Popover
           content={
             <div className={styles.userMenu}>
@@ -391,12 +443,12 @@ const Header: React.FC = () => {
                 onClick={() => {
                   if (window.ipcRenderer) {
                     window.ipcRenderer?.openExternal(
-                      "https://github.com/mmdctjj/AudioDock"
+                      "https://github.com/mmdctjj/AudioDock",
                     );
                   } else {
                     window.open(
                       "https://github.com/mmdctjj/AudioDock",
-                      "_blank"
+                      "_blank",
                     );
                   }
                 }}
@@ -446,7 +498,6 @@ const Header: React.FC = () => {
                 <SettingOutlined className={styles.actionIcon} />
                 设置
               </div>
-
               <div className={styles.userMenuItem} onClick={handleLogout}>
                 <LogoutOutlined />
                 退出登陆
@@ -492,12 +543,12 @@ const Header: React.FC = () => {
             {importTask?.status === TaskStatus.INITIALIZING
               ? "正在初始化..."
               : importTask?.status === TaskStatus.PARSING
-              ? "正在解析媒体文件..."
-              : importTask?.status === TaskStatus.SUCCESS
-              ? "入库完成"
-              : importTask?.status === TaskStatus.FAILED
-              ? "入库失败"
-              : "准备中"}
+                ? "正在解析媒体文件..."
+                : importTask?.status === TaskStatus.SUCCESS
+                  ? "入库完成"
+                  : importTask?.status === TaskStatus.FAILED
+                    ? "入库失败"
+                    : "准备中"}
           </div>
           {importTask?.status === TaskStatus.FAILED && (
             <div style={{ color: token.colorError, marginBottom: 16 }}>
@@ -508,7 +559,7 @@ const Header: React.FC = () => {
             percent={
               importTask?.total
                 ? Math.round(
-                    ((importTask.current || 0) / importTask.total) * 100
+                    ((importTask.current || 0) / importTask.total) * 100,
                   )
                 : 0
             }
@@ -516,8 +567,8 @@ const Header: React.FC = () => {
               importTask?.status === TaskStatus.FAILED
                 ? "exception"
                 : importTask?.status === TaskStatus.SUCCESS
-                ? "success"
-                : "active"
+                  ? "success"
+                  : "active"
             }
           />
           <div

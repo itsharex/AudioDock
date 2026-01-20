@@ -4,11 +4,6 @@ import { useAuthStore } from "../store/auth";
 
 // Get base URL based on environment
 export function getBaseURL(): string {
-  // In development, return absolute backend URL
-  if (import.meta.env.DEV) {
-    return "http://localhost:3000";
-  }
-
   // In production, use server address from localStorage or default
   try {
     const serverAddress = localStorage.getItem("serverAddress");
@@ -39,15 +34,15 @@ const messageContent: { [key in number]: string } = {
 
 instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const baseURL = getBaseURL();
+    const tokenKey = `token_${baseURL}`;
+    const token = localStorage.getItem(tokenKey);
     if (token) {
       config.headers.set("Authorization", `Bearer ${token}`);
     }
 
-    // Update baseURL dynamically in production
-    if (!import.meta.env.DEV) {
-      config.baseURL = getBaseURL();
-    }
+    // Update baseURL dynamically for every request
+    config.baseURL = baseURL;
 
     return config;
   },

@@ -38,7 +38,12 @@ const AppContent = () => {
   const { mode } = useTheme();
   const themeConfig = getThemeConfig(mode);
   const [messageApi, contextHolder] = message.useMessage();
-  const { token, user } = useAuthStore();
+  const { token, user, switchServer } = useAuthStore();
+
+  useEffect(() => {
+    const savedAddress = localStorage.getItem("serverAddress") || "http://localhost:3000";
+    switchServer(savedAddress);
+  }, []);
 
   useEffect(() => {
     if (token && user) {
