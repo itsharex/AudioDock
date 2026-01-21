@@ -1,78 +1,54 @@
-import request from "./request";
+import { getAdapter } from "./adapter/manager";
 import type {
-    ILoadMoreData,
-    ISuccessResponse,
-    ITableData,
-    Track,
+    Track
 } from "./models";
-
-export const getTrackList = () => {
-  return request.get<any, ISuccessResponse<Track[]>>("/track/list");
-};
-
-export const getTrackTableList = (params: {
-  pageSize: number;
-  current: number;
-}) => {
-  return request.get<any, ISuccessResponse<ITableData<Track[]>>>(
-    "/table-list",
-    { params }
-  );
-};
-
-export const loadMoreTrack = (params: {
-  pageSize: number;
-  loadCount: number;
-}) => {
-  return request.get<any, ISuccessResponse<ILoadMoreData<Track[]>>>(
-    "/load-more",
-    { params }
-  );
-};
-
-export const createTrack = (data: Omit<Track, "id">) => {
-  return request.post<any, ISuccessResponse<Track>>("/track", data);
-};
-
-export const updateTrack = (id: number, data: Partial<Track>) => {
-  return request.put<any, ISuccessResponse<Track>>(`/track/${id}`, data);
-};
-
-export const deleteTrack = (id: number, deleteAlbum: boolean = false) => {
-  return request.delete<any, ISuccessResponse<boolean>>(`/track/${id}`, {
-    params: { deleteAlbum },
-  });
-};
-
-export const getDeletionImpact = (id: number) => {
-  return request.get<
-    any,
-    ISuccessResponse<{ isLastTrackInAlbum: boolean; albumName: string | null }>
-  >(`/track/${id}/deletion-impact`);
-};
-
-export const batchCreateTracks = (data: Omit<Track, "id">[]) => {
-  return request.post<any, ISuccessResponse<boolean>>(
-    "/track/batch-create",
-    data
-  );
-};
-
-export const batchDeleteTracks = (ids: number[]) => {
-  return request.delete<any, ISuccessResponse<boolean>>(
-    "/track/batch-delete",
-    { data: ids }
-  );
-};
-
-export const getLatestTracks = (type?: string, random?: boolean, pageSize?: number) => {
-  return request.get<any, ISuccessResponse<Track[]>>("/track/latest", {
-    params: { type, random, pageSize },
-  });
-};
-
-export const getTracksByArtist = (artist: string) => {
-  return request.get<any, ISuccessResponse<Track[]>>("/track/artist", {
-    params: { artist },
-  });
-};
+  
+  export const getTrackList = () => {
+    return getAdapter().track.getTrackList();
+  };
+  
+  export const getTrackTableList = (params: {
+    pageSize: number;
+    current: number;
+  }) => {
+    return getAdapter().track.getTrackTableList(params);
+  };
+  
+  export const loadMoreTrack = (params: {
+    pageSize: number;
+    loadCount: number;
+  }) => {
+    return getAdapter().track.loadMoreTrack(params);
+  };
+  
+  export const createTrack = (data: Omit<Track, "id">) => {
+    return getAdapter().track.createTrack(data);
+  };
+  
+  export const updateTrack = (id: number, data: Partial<Track>) => {
+    return getAdapter().track.updateTrack(id, data);
+  };
+  
+  export const deleteTrack = (id: number, deleteAlbum: boolean = false) => {
+    return getAdapter().track.deleteTrack(id, deleteAlbum);
+  };
+  
+  export const getDeletionImpact = (id: number) => {
+    return getAdapter().track.getDeletionImpact(id);
+  };
+  
+  export const batchCreateTracks = (data: Omit<Track, "id">[]) => {
+    return getAdapter().track.batchCreateTracks(data);
+  };
+  
+  export const batchDeleteTracks = (ids: number[]) => {
+    return getAdapter().track.batchDeleteTracks(ids);
+  };
+  
+  export const getLatestTracks = (type?: string, random?: boolean, pageSize?: number) => {
+    return getAdapter().track.getLatestTracks(type, random, pageSize);
+  };
+  
+  export const getTracksByArtist = (artist: string) => {
+    return getAdapter().track.getTracksByArtist(artist);
+  };

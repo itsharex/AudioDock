@@ -1,102 +1,78 @@
+import { getAdapter } from "./adapter/manager";
 import type {
-    Album,
-    ILoadMoreData,
-    ISuccessResponse,
-    ITableData,
+    Album
 } from "./models";
-import request from "./request";
-
-export const getAlbumList = () => {
-  return request.get<any, ISuccessResponse<Album[]>>("/album/list");
-};
-
-export const getAlbumTableList = (params: {
-  pageSize: number;
-  current: number;
-}) => {
-  return request.get<any, ISuccessResponse<ITableData<Album[]>>>(
-    "/album/table-list",
-    { params }
-  );
-};
-
-export const loadMoreAlbum = (params: {
-  pageSize: number;
-  loadCount: number;
-  type?: string;
-}) => {
-  return request.get<any, ISuccessResponse<ILoadMoreData<Album>>>(
-    "/album/load-more",
-    { params }
-  );
-};
-
-export const createAlbum = (data: Omit<Album, "id">) => {
-  return request.post<any, ISuccessResponse<Album>>("/album", data);
-};
-
-export const updateAlbum = (id: number, data: Partial<Album>) => {
-  return request.put<any, ISuccessResponse<Album>>(`/album/${id}`, data);
-};
-
-export const deleteAlbum = (id: number) => {
-  return request.delete<any, ISuccessResponse<boolean>>(`/album/${id}`);
-};
-
-export const batchCreateAlbums = (data: Omit<Album, "id">[]) => {
-  return request.post<any, ISuccessResponse<boolean>>(
-    "/album/batch-create",
-    data
-  );
-};
-
-export const batchDeleteAlbums = (ids: number[]) => {
-  return request.delete<any, ISuccessResponse<boolean>>(
-    "/album/batch-delete",
-    { data: ids }
-  );
-};
-
-// Get recommended albums (8 random unlistened albums)
-export const getRecommendedAlbums = (type?: string, random?: boolean, pageSize?: number) => {
-  return request.get<any, ISuccessResponse<Album[]>>("/album/recommend", {
-    params: { type, random, pageSize },
-  });
-};
-
-// Get recent albums (8 latest albums)
-export const getRecentAlbums = (type?: string, random?: boolean, pageSize?: number) => {
-  return request.get<any, ISuccessResponse<Album[]>>("/album/latest", {
-    params: { type, random, pageSize },
-  });
-};
-
-// Get album details by ID
-export const getAlbumById = (id: number) => {
-  return request.get<any, ISuccessResponse<Album>>(`/album/${id}`);
-};
-
-// Get album tracks with pagination
-export const getAlbumTracks = (
-  id: number,
-  pageSize: number,
-  skip: number,
-  sort: "asc" | "desc" = "asc",
-  keyword?: string,
-  userId?: number,
-) => {
-  return request.get<any, ISuccessResponse<{ list: any[]; total: number }>>(
-    `/album/${id}/tracks`,
-    {
-      params: { pageSize, skip, sort, keyword, userId },
-    }
-  );
-};
-
-export const getAlbumsByArtist = (artist: string) => {
-  return request.get<any, ISuccessResponse<Album[]>>(`/album/artist/${artist}`);
-};
-
-export const getCollaborativeAlbumsByArtist = (artist: string) => {
-  return request.get<any, ISuccessResponse<Album[]>>(`/album/collaborative/${artist}`);
-};
+  
+  export const getAlbumList = () => {
+    return getAdapter().album.getAlbumList();
+  };
+  
+  export const getAlbumTableList = (params: {
+    pageSize: number;
+    current: number;
+  }) => {
+    return getAdapter().album.getAlbumTableList(params);
+  };
+  
+  export const loadMoreAlbum = (params: {
+    pageSize: number;
+    loadCount: number;
+    type?: string;
+  }) => {
+    return getAdapter().album.loadMoreAlbum(params);
+  };
+  
+  export const createAlbum = (data: Omit<Album, "id">) => {
+    return getAdapter().album.createAlbum(data);
+  };
+  
+  export const updateAlbum = (id: number, data: Partial<Album>) => {
+    return getAdapter().album.updateAlbum(id, data);
+  };
+  
+  export const deleteAlbum = (id: number) => {
+    return getAdapter().album.deleteAlbum(id);
+  };
+  
+  export const batchCreateAlbums = (data: Omit<Album, "id">[]) => {
+    return getAdapter().album.batchCreateAlbums(data);
+  };
+  
+  export const batchDeleteAlbums = (ids: number[]) => {
+    return getAdapter().album.batchDeleteAlbums(ids);
+  };
+  
+  // Get recommended albums (8 random unlistened albums)
+  export const getRecommendedAlbums = (type?: string, random?: boolean, pageSize?: number) => {
+    return getAdapter().album.getRecommendedAlbums(type, random, pageSize);
+  };
+  
+  // Get recent albums (8 latest albums)
+  export const getRecentAlbums = (type?: string, random?: boolean, pageSize?: number) => {
+    return getAdapter().album.getRecentAlbums(type, random, pageSize);
+  };
+  
+  // Get album details by ID
+  export const getAlbumById = (id: number) => {
+    return getAdapter().album.getAlbumById(id);
+  };
+  
+  // Get album tracks with pagination
+  export const getAlbumTracks = (
+    id: number,
+    pageSize: number,
+    skip: number,
+    sort: "asc" | "desc" = "asc",
+    keyword?: string,
+    userId?: number,
+  ) => {
+    return getAdapter().album.getAlbumTracks(id, pageSize, skip, sort, keyword, userId);
+  };
+  
+  export const getAlbumsByArtist = (artist: string) => {
+    return getAdapter().album.getAlbumsByArtist(artist);
+  };
+  
+  export const getCollaborativeAlbumsByArtist = (artist: string) => {
+    return getAdapter().album.getCollaborativeAlbumsByArtist(artist);
+  };

@@ -14,3 +14,8 @@ export * from "./track";
 export * from "./user";
 export * from "./userAudiobookHistory";
 
+export const SOURCEMAP = {
+    Navidrome: "subsonic",
+    AudioServe: "subsonic",
+    AudioDock: "audiodock",
+}
