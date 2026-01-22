@@ -394,7 +394,7 @@ export default function HomeScreen() {
                       >
                         <Image
                           source={{
-                            uri: getImageUrl(item.avatar, `https://picsum.photos/seed/${item.id}/200/200`),
+                            uri: getImageUrl(item.avatar || item.cover, `https://picsum.photos/seed/${item.id}/200/200`),
                           }}
                           style={styles.artistImage}
                         />
