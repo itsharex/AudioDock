@@ -96,7 +96,53 @@ export class SubsonicArtistAdapter implements IArtistAdapter {
   }
 
   async getLatestArtists(type: string, random?: boolean, pageSize?: number) {
-    // Not supported directly, return random subset?
-    return this.response([]);
+    // 使用 getAlbumList2 请求随机专辑，将专辑的 artist 信息映射为 Artist 列表返回
+    const size = 10;
+    // 请求随机专辑
+    const res = await this.client.get<any>("getAlbumList2", { type: "random", size });
+
+    // 兼容不同返回结构，提取 albums 数组
+    let albums: any[] = [];
+    if (!res?.albumList2?.album?.length) {
+      albums = [];
+    } else {
+      // 有些实现可能把结果直接放在 root
+      albums = res?.albumList2?.album;
+    }
+
+    // 将 album 映射为 Artist（尽量从 album 中提取 artistId/artist/coverArt）
+    const list = albums.map(album => {
+      // 常见字段尝试顺序
+      const artistId =
+        album.artistId ??
+        album.artistIdStr ??
+        (album.artist && (album.artist.id ?? album.artistId)) ??
+        album.artist; // 最后 fallback 为 artist 名称
+      const name =
+        typeof album.artist === "string"
+          ? album.artist
+          : album.artistName ?? album.artist?.name ?? album.artist; // 多种可能的字段名
+      const coverId = album.coverArt ?? album.coverArtId ?? album.id ?? null;
+      const cover = coverId ? this.client.getCoverUrl(coverId) : undefined;
+
+      // 构造最小 Artist 对象（按前端通常需要的 id/name/cover）
+      const artist: any = {
+        id: artistId ?? name ?? "",
+        name: name ?? "",
+      };
+      if (cover) artist.cover = cover;
+      return artist;
+    });
+
+    // 根据 artist.id 去重（保留第一次出现的）
+    const seen = new Set<string>();
+    const uniqueList = list.filter(a => {
+      const key = String(a.id ?? "");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return this.response(uniqueList);
   }
 }
