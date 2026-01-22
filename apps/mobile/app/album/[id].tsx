@@ -5,9 +5,9 @@ import { TrackMoreModal } from "@/src/components/TrackMoreModal";
 import { useAuth } from "@/src/context/AuthContext";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { useTheme } from "@/src/context/ThemeContext";
-import { getBaseURL } from "@/src/https";
 import { Album, Track } from "@/src/models";
 import { downloadTracks } from "@/src/services/downloadManager";
+import { getImageUrl } from "@/src/utils/image";
 import { Ionicons } from "@expo/vector-icons";
 import {
     getAlbumById,
@@ -253,9 +253,7 @@ export default function AlbumDetailScreen() {
             <View style={styles.coverContainer}>
               <Image
                 source={{
-                  uri: album.cover
-                    ? `${getBaseURL()}${album.cover}`
-                    : `https://picsum.photos/seed/${album.id}/300/300`,
+                  uri: getImageUrl(album.cover, `https://picsum.photos/seed/${album.id}/300/300`),
                 }}
                 style={styles.cover}
               />
@@ -427,9 +425,7 @@ export default function AlbumDetailScreen() {
             </View>
             <Image
               source={{
-                uri: item.cover
-                  ? `${getBaseURL()}${item.cover}`
-                  : `https://picsum.photos/seed/${item.id}/20/20`,
+                uri: getImageUrl(item.cover, `https://picsum.photos/seed/${item.id}/20/20`),
               }}
               alt=""
               style={{ width: 20, height: 20, borderRadius: 2 }}

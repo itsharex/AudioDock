@@ -10,6 +10,8 @@ import {
   getPlaylists,
   getRunningImportTask,
   getTrackHistory,
+  SOURCEMAP,
+  SOURCETIPSMAP,
   TaskStatus,
   type ImportTask,
 } from "@soundx/services";
@@ -37,11 +39,15 @@ import {
   getDownloadedTracks,
   removeDownloadedTrack,
 } from "../../src/services/cache";
+import { getImageUrl } from "../../src/utils/image";
 import { usePlayMode } from "../../src/utils/playMode";
 
 import { useCheckUpdate } from "@/hooks/useCheckUpdate";
 import { UpdateModal } from "@/src/components/UpdateModal";
 import { Ionicons } from "@expo/vector-icons";
+const logo = require("../../assets/images/logo.png");
+const subsonicLogo = require("../../assets/images/subsonic.png");
+const embyLogo = require("../../assets/images/emby.png");
 
 type TabType = "playlists" | "favorites" | "history" | "downloads";
 type SubTabType = "track" | "album";
@@ -52,12 +58,7 @@ const StackedCover = ({ tracks }: { tracks: any[] }) => {
   return (
     <View style={styles.stackedCoverContainer}>
       {covers.map((track, index) => {
-        let coverUrl = "https://picsum.photos/100";
-        if (track.cover) {
-          coverUrl = track.cover.startsWith("http")
-            ? track.cover
-            : `${getBaseURL()}${track.cover}`;
-        }
+        const coverUrl = getImageUrl(track.cover, "https://picsum.photos/100");
 
         return (
           <Image
@@ -93,7 +94,7 @@ const StackedCover = ({ tracks }: { tracks: any[] }) => {
 export default function PersonalScreen() {
   const { theme, toggleTheme, colors } = useTheme();
   const { mode, setMode } = usePlayMode();
-  const { logout, user, switchServer } = useAuth();
+  const { logout, user, switchServer, sourceType, setSourceType } = useAuth();
   const { playTrackList } = usePlayer();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -124,23 +125,24 @@ export default function PersonalScreen() {
         style: "destructive",
         onPress: async () => {
           try {
-            const history = await AsyncStorage.getItem("serverHistory");
+            const historyKey = `serverHistory_${sourceType}`;
+            const history = await AsyncStorage.getItem(historyKey);
             if (history) {
               const parsed = JSON.parse(history);
               const filtered = parsed.filter((item: any) => item.value !== address);
-              await AsyncStorage.setItem("serverHistory", JSON.stringify(filtered));
+              await AsyncStorage.setItem(historyKey, JSON.stringify(filtered));
               setServerHistory(filtered);
 
               // Also clear associated data
               await AsyncStorage.removeItem(`token_${address}`);
               await AsyncStorage.removeItem(`user_${address}`);
               await AsyncStorage.removeItem(`device_${address}`);
-              await AsyncStorage.removeItem(`creds_${address}`);
+              await AsyncStorage.removeItem(`creds_${sourceType}_${address}`);
 
               if (getBaseURL() === address) {
                 // If it was current, reset to default or first available
-                const nextUrl = filtered.length > 0 ? filtered[0].value : "http://localhost:3000";
-                await switchServer(nextUrl);
+                const nextUrl = filtered.length > 0 ? filtered[0].value : (sourceType === 'AudioDock' ? "http://localhost:3000" : "");
+                await switchServer(nextUrl, sourceType);
               }
             }
           } catch (e) {
@@ -151,22 +153,25 @@ export default function PersonalScreen() {
     ]);
   };
 
-  const loadServerHistory = useCallback(async () => {
-    const history = await AsyncStorage.getItem("serverHistory");
+  const loadServerHistory = useCallback(async (type: string) => {
+    const historyKey = `serverHistory_${type}`;
+    const history = await AsyncStorage.getItem(historyKey);
     if (history) {
       setServerHistory(JSON.parse(history));
     } else {
-      setServerHistory([
-        { label: "http://localhost:3000", value: "http://localhost:3000" },
-      ]);
+      setServerHistory(
+        type === "AudioDock"
+          ? [{ label: "http://localhost:3000", value: "http://localhost:3000" }]
+          : [],
+      );
     }
   }, []);
 
   useEffect(() => {
     if (serverModalVisible) {
-      loadServerHistory();
+      loadServerHistory(sourceType);
     }
-  }, [serverModalVisible, loadServerHistory]);
+  }, [serverModalVisible, sourceType, loadServerHistory]);
 
   useEffect(() => {
     checkUpdate();
@@ -404,18 +409,7 @@ export default function PersonalScreen() {
       // Wait, FlatList data source is controlled.
 
       const data = item;
-      let coverUrl = "https://picsum.photos/100";
-
-      if (item.cover) {
-        // For local tracks, item.cover might be local path? Or we saved the global URL?
-        // Our save logic saved the whole track object as is, including cover URL.
-        // But if we are offline, we can't load http cover.
-        // Ideally we cached cover too. But we didn't implement cover caching.
-        // We will assume online for now, or fallback.
-        coverUrl = item.cover.startsWith("http")
-          ? item.cover
-          : `${getBaseURL()}${item.cover}`;
-      }
+      const coverUrl = getImageUrl(item.cover, "https://picsum.photos/100");
 
       return (
         <TouchableOpacity
@@ -604,7 +598,7 @@ export default function PersonalScreen() {
       {/* User Info */}
       <View style={styles.userInfo}>
         <Image
-          source={{ uri: "https://picsum.photos/200" }} // Placeholder for avatar
+          source={{ uri: getImageUrl((user as any)?.avatar, "https://picsum.photos/200") }} // Placeholder for avatar
           style={styles.avatar}
         />
         <Text style={[styles.nickname, { color: colors.text }]}>
@@ -986,6 +980,68 @@ export default function PersonalScreen() {
             >
               切换服务端
             </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                backgroundColor: colors.background,
+                borderRadius: 10,
+                padding: 4,
+                marginBottom: 10,
+              }}
+            >
+              {Object.keys(SOURCEMAP).map((key) => {
+                const isActive = sourceType === key;
+                const isDisabled = key === "Emby";
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    onPress={() => !isDisabled && setSourceType(key)}
+                    disabled={isDisabled}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 8,
+                      gap: 4,
+                      alignItems: "center",
+                      backgroundColor: isActive ? colors.card : "transparent",
+                      borderRadius: 8,
+                      opacity: isDisabled ? 0.5 : 1,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      {key === "Emby" ? (
+                        <Image source={embyLogo} style={{ width: 18, height: 18, marginRight: 4 }} />
+                      ) : key === "Subsonic" ? (
+                        <Image source={subsonicLogo} style={{ width: 16, height: 16, marginRight: 4 }} />
+                      ) : (
+                        <Image source={logo} style={{ width: 16, height: 16, marginRight: 4 }} />
+                      )}
+                      <Text
+                        style={{
+                          color: isActive ? colors.primary : colors.secondary,
+                          fontWeight: isActive ? "bold" : "normal",
+                          fontSize: 14,
+                        }}
+                      >
+                        {key}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text
+              style={{
+                color: colors.secondary,
+                fontSize: 12,
+                marginBottom: 15,
+                textAlign: "center",
+              }}
+            >
+              {SOURCETIPSMAP[sourceType as keyof typeof SOURCETIPSMAP]}
+            </Text>
+
             <FlatList
               data={serverHistory}
               keyExtractor={(item) => item.value}
@@ -1004,7 +1060,7 @@ export default function PersonalScreen() {
                       },
                     ]}
                     onPress={async () => {
-                      await switchServer(item.value);
+                      await switchServer(item.value, sourceType);
                       setServerModalVisible(false);
                     }}
                   >

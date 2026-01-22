@@ -5,19 +5,19 @@ import { getArtistList, loadMoreAlbum } from "@soundx/services";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  SectionList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
+    ActivityIndicator,
+    Image,
+    SectionList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/context/ThemeContext";
-import { getBaseURL } from "../../src/https";
 import { Album, Artist } from "../../src/models";
+import { getImageUrl } from "../../src/utils/image";
 import { usePlayMode } from "../../src/utils/playMode";
 
 const GAP = 15;
@@ -130,9 +130,7 @@ const ArtistList = () => {
               >
                 <Image
                   source={{
-                    uri: item.avatar
-                      ? `${getBaseURL()}${item.avatar}`
-                      : `https://picsum.photos/seed/${item.id}/200/200`,
+                    uri: getImageUrl(item.avatar, `https://picsum.photos/seed/${item.id}/200/200`),
                   }}
                   style={[
                     styles.image,
@@ -277,9 +275,7 @@ const AlbumList = () => {
                 >
                   <Image
                     source={{
-                      uri: item.cover
-                        ? `${getBaseURL()}${item.cover}`
-                        : `https://picsum.photos/seed/${item.id}/200/200`,
+                      uri: getImageUrl(item.cover, `https://picsum.photos/seed/${item.id}/200/200`),
                     }}
                     style={[
                       styles.albumImage,

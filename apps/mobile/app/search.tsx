@@ -31,8 +31,8 @@ import { AddToPlaylistModal } from "../src/components/AddToPlaylistModal";
 import { useAuth } from "../src/context/AuthContext";
 import { usePlayer } from "../src/context/PlayerContext";
 import { useTheme } from "../src/context/ThemeContext";
-import { getBaseURL } from "../src/https";
 import { Album, Artist, Track } from "../src/models";
+import { getImageUrl } from "../src/utils/image";
 import { usePlayMode } from "../src/utils/playMode";
 
 export default function SearchScreen() {
@@ -160,16 +160,12 @@ export default function SearchScreen() {
   };
 
   const renderItem = ({ item, type }: { item: any; type: string }) => {
-    let coverUrl = "https://picsum.photos/100";
-    if (type === "track" || type === "album") {
-      if (item.cover) {
-        coverUrl = item.cover.startsWith("http") ? item.cover : `${getBaseURL()}${item.cover}`;
-      }
-    } else if (type === "artist") {
-      if (item.avatar) {
-        coverUrl = item.avatar.startsWith("http") ? item.avatar : `${getBaseURL()}${item.avatar}`;
-      }
-    }
+    const coverUrl =
+      type === "track" || type === "album"
+        ? getImageUrl(item.cover, "https://picsum.photos/100")
+        : type === "artist"
+          ? getImageUrl(item.avatar, "https://picsum.photos/100")
+          : "https://picsum.photos/100";
 
     const isLiked = user && (
        type === 'track' 

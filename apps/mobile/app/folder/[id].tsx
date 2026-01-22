@@ -25,8 +25,8 @@ import { FolderMoreModal } from "../../src/components/FolderMoreModal";
 import { TrackMoreModal } from "../../src/components/TrackMoreModal";
 import { usePlayer } from "../../src/context/PlayerContext";
 import { useTheme } from "../../src/context/ThemeContext";
-import { getBaseURL } from "../../src/https";
 import { Track } from "../../src/models";
+import { getImageUrl } from "../../src/utils/image";
 
 export default function FolderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,8 +46,8 @@ export default function FolderDetailScreen() {
 
   // Selection state
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedFolders, setSelectedFolders] = useState<number[]>([]);
-  const [selectedTracks, setSelectedTracks] = useState<number[]>([]);
+  const [selectedFolders, setSelectedFolders] = useState<(number | string)[]>([]);
+  const [selectedTracks, setSelectedTracks] = useState<(number | string)[]>([]);
 
   // Modal state
   const [activeFolder, setActiveFolder] = useState<Folder | null>(null);
@@ -101,13 +101,13 @@ export default function FolderDetailScreen() {
     }
   };
 
-  const toggleFolderSelection = (id: number) => {
+  const toggleFolderSelection = (id: number | string) => {
     setSelectedFolders((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
-  const toggleTrackSelection = (id: number) => {
+  const toggleTrackSelection = (id: number | string) => {
     setSelectedTracks((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
@@ -237,9 +237,7 @@ export default function FolderDetailScreen() {
             ) : (
               <Image
                 source={{
-                  uri: (item as Track).cover
-                    ? `${getBaseURL()}${(item as Track).cover}`
-                    : `https://picsum.photos/seed/${item.id}/300/300`,
+                  uri: getImageUrl((item as Track).cover, `https://picsum.photos/seed/${item.id}/300/300`),
                 }}
                 style={styles.gridTrackCover}
               />
@@ -283,9 +281,7 @@ export default function FolderDetailScreen() {
           ) : (
             <Image
               source={{
-                uri: (item as Track).cover
-                  ? `${getBaseURL()}${(item as Track).cover}`
-                  : `https://picsum.photos/seed/${item.id}/200/200`,
+                uri: getImageUrl((item as Track).cover, `https://picsum.photos/seed/${item.id}/200/200`),
               }}
               style={styles.trackCover}
             />

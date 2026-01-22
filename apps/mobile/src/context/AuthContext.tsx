@@ -1,5 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { login as loginApi, register as registerApi } from "@soundx/services";
+import {
+    login as loginApi,
+    register as registerApi,
+    setServiceConfig,
+    SOURCEMAP,
+    useNativeAdapter,
+    useSubsonicAdapter,
+} from "@soundx/services";
 import * as Device from 'expo-device';
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getBaseURL, initBaseURL, setBaseURL } from "../https";
@@ -13,7 +20,9 @@ interface AuthContextType {
   register: (user: Partial<User>) => Promise<void>;
   logout: () => Promise<void>;
   device: any | null;
-  switchServer: (url: string) => Promise<void>;
+  sourceType: string;
+  setSourceType: (type: string) => void;
+  switchServer: (url: string, type?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,6 +33,8 @@ const AuthContext = createContext<AuthContextType>({
   register: async () => {},
   logout: async () => {},
   device: null,
+  sourceType: "AudioDock",
+  setSourceType: () => {},
   switchServer: async () => {},
 });
 
@@ -35,7 +46,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [device, setDevice] = useState<any | null>(null);
+  const [sourceType, setSourceTypeDirectly] = useState<string>("AudioDock");
   const [isLoading, setIsLoading] = useState(true);
+
+  const setSourceType = async (type: string) => {
+    setSourceTypeDirectly(type);
+    await AsyncStorage.setItem("selectedSourceType", type);
+  };
 
   useEffect(() => {
     loadAuthData();
@@ -45,7 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await initBaseURL(); // Initialize base URL first
       const savedAddress = getBaseURL();
-      
+      const savedType = (await AsyncStorage.getItem("selectedSourceType")) || "AudioDock";
+      setSourceTypeDirectly(savedType);
+
       const savedToken = await AsyncStorage.getItem(`token_${savedAddress}`);
       const savedUser = await AsyncStorage.getItem(`user_${savedAddress}`);
 
@@ -58,6 +77,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const savedDevice = await AsyncStorage.getItem(`device_${savedAddress}`);
       if (savedDevice) {
         setDevice(JSON.parse(savedDevice));
+      }
+
+      // Configure adapter on load
+      const mappedType = SOURCEMAP[savedType as keyof typeof SOURCEMAP] || "audiodock";
+      const credsKey = `creds_${savedType}_${savedAddress}`;
+      const savedCreds = await AsyncStorage.getItem(credsKey);
+      if (savedCreds) {
+        const { username, password } = JSON.parse(savedCreds);
+        setServiceConfig({ username, password, clientName: "SoundX Mobile" });
+      }
+
+      if (mappedType === "subsonic") {
+        useSubsonicAdapter();
+      } else {
+        useNativeAdapter();
       }
     } catch (error) {
       console.error("Failed to load auth data:", error);
@@ -128,12 +162,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const switchServer = async (url: string) => {
+  const switchServer = async (url: string, type?: string) => {
     try {
       setIsLoading(true);
+      const targetType = type || sourceType;
+      const mappedType = SOURCEMAP[targetType as keyof typeof SOURCEMAP] || "audiodock";
+
       await AsyncStorage.setItem("serverAddress", url);
+      await AsyncStorage.setItem("selectedSourceType", targetType);
       setBaseURL(url);
-      
+      setSourceTypeDirectly(targetType);
+
+      // Configure adapter for the new server
+      const credsKey = `creds_${targetType}_${url}`;
+      const savedCreds = await AsyncStorage.getItem(credsKey);
+      let username = undefined;
+      let password = undefined;
+      if (savedCreds) {
+        const creds = JSON.parse(savedCreds);
+        username = creds.username;
+        password = creds.password;
+      }
+
+      setServiceConfig({ username, password, clientName: "SoundX Mobile" });
+      if (mappedType === "subsonic") {
+        useSubsonicAdapter();
+      } else {
+        useNativeAdapter();
+      }
+
       const savedToken = await AsyncStorage.getItem(`token_${url}`);
       const savedUser = await AsyncStorage.getItem(`user_${url}`);
       const savedDevice = await AsyncStorage.getItem(`device_${url}`);
@@ -150,7 +207,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, login, register, logout, device, switchServer }}
+      value={{
+        user,
+        token,
+        isLoading,
+        login,
+        register,
+        logout,
+        device,
+        sourceType,
+        setSourceType,
+        switchServer,
+      }}
     >
       {children}
     </AuthContext.Provider>

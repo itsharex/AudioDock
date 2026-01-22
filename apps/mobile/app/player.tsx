@@ -3,8 +3,8 @@ import PlayingIndicator from "@/src/components/PlayingIndicator";
 import { useAuth } from "@/src/context/AuthContext";
 import { PlayMode, usePlayer } from "@/src/context/PlayerContext";
 import { useTheme } from "@/src/context/ThemeContext";
-import { getBaseURL } from "@/src/https";
 import { Track, TrackType, UserTrackLike } from "@/src/models";
+import { getImageUrl } from "@/src/utils/image";
 import { Ionicons } from "@expo/vector-icons";
 import { Slider } from "@miblanchard/react-native-slider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -441,12 +441,7 @@ export default function PlayerScreen() {
           </View>
           <Image
             source={{
-              uri: item.cover
-                ? typeof item.cover === "string" &&
-                  item.cover.startsWith("http")
-                  ? item.cover
-                  : `${getBaseURL()}${item.cover}`
-                : `https://picsum.photos/seed/${item.id}/20/20`,
+              uri: getImageUrl(item.cover, `https://picsum.photos/seed/${item.id}/20/20`),
             }}
             style={styles.playlistItemCover}
           />
@@ -713,12 +708,7 @@ export default function PlayerScreen() {
             >
               <Image
                 source={{
-                  uri: currentTrack.cover
-                    ? typeof currentTrack.cover === "string" &&
-                      currentTrack.cover.startsWith("http")
-                      ? currentTrack.cover
-                      : `${getBaseURL()}${currentTrack.cover}`
-                    : "https://picsum.photos/400",
+                  uri: getImageUrl(currentTrack.cover, "https://picsum.photos/400"),
                 }}
                 onLayout={(e) => setArtworkHeight(e.nativeEvent.layout.height)}
                 style={[styles.artwork, { marginBottom: 0 }]}
@@ -906,12 +896,7 @@ export default function PlayerScreen() {
               >
                 <Image
                   source={{
-                    uri: currentTrack.cover
-                      ? typeof currentTrack.cover === "string" &&
-                        currentTrack.cover.startsWith("http")
-                        ? currentTrack.cover
-                        : `${getBaseURL()}${currentTrack.cover}`
-                      : "https://picsum.photos/400",
+                    uri: getImageUrl(currentTrack.cover, "https://picsum.photos/400"),
                   }}
                   style={styles.artwork}
                 />

@@ -180,7 +180,7 @@ export default function AdminScreen() {
                 styles.actionButton,
                 { backgroundColor: "red", marginLeft: 8 },
               ]}
-              onPress={() => handleDeleteUser(item.id)}
+              onPress={() => handleDeleteUser(item.id as unknown as number)}
             >
               <Ionicons name="trash-outline" size={20} color="#fff" />
             </TouchableOpacity>

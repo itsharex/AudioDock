@@ -2,29 +2,29 @@ import PlayingIndicator from "@/src/components/PlayingIndicator";
 import { TrackMoreModal } from "@/src/components/TrackMoreModal";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { useTheme } from "@/src/context/ThemeContext";
-import { getBaseURL } from "@/src/https";
 import { Playlist } from "@/src/models";
 import { downloadTracks } from "@/src/services/downloadManager";
+import { getImageUrl } from "@/src/utils/image";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  deletePlaylist,
-  getPlaylistById,
-  updatePlaylist,
+    deletePlaylist,
+    getPlaylistById,
+    updatePlaylist,
 } from "@soundx/services";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ViewStyle,
+    ActivityIndicator,
+    Alert,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -42,7 +42,7 @@ export default function PlaylistDetailScreen() {
   const [trackMoreVisible, setTrackMoreVisible] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedTrackIds, setSelectedTrackIds] = useState<number[]>([]);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<(number | string)[]>([]);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function PlaylistDetailScreen() {
     ]);
   };
 
-  const toggleTrackSelection = (trackId: number) => {
+  const toggleTrackSelection = (trackId: number | string) => {
     setSelectedTrackIds((prev) =>
       prev.includes(trackId)
         ? prev.filter((id) => id !== trackId)
@@ -252,11 +252,7 @@ export default function PlaylistDetailScreen() {
               >
                 <Image
                   source={{
-                    uri: album.cover
-                      ? album.cover.startsWith("http")
-                        ? album.cover
-                        : `${getBaseURL()}${album.cover}`
-                      : `https://picsum.photos/seed/${album.id}/400/400`,
+                    uri: getImageUrl(album.cover, `https://picsum.photos/seed/${album.id}/400/400`),
                   }}
                   style={styles.photoWallImage}
                 />
@@ -318,11 +314,7 @@ export default function PlaylistDetailScreen() {
               </View>
               <Image
                 source={{
-                  uri: track.cover
-                    ? track.cover.startsWith("http")
-                      ? track.cover
-                      : `${getBaseURL()}${track.cover}`
-                    : `https://picsum.photos/seed/${track.id}/20/20`,
+                  uri: getImageUrl(track.cover, `https://picsum.photos/seed/${track.id}/20/20`),
                 }}
                 alt=""
                 style={{ width: 40, height: 40, borderRadius: 4 }}

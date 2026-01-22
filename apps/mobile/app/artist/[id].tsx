@@ -3,26 +3,26 @@ import PlayingIndicator from "@/src/components/PlayingIndicator";
 import { TrackMoreModal } from "@/src/components/TrackMoreModal";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { useTheme } from "@/src/context/ThemeContext";
-import { getBaseURL } from "@/src/https";
 import { Album, Artist, Track, TrackType } from "@/src/models";
+import { getImageUrl } from "@/src/utils/image";
 import { usePlayMode } from "@/src/utils/playMode";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  getAlbumsByArtist,
-  getArtistById,
-  getCollaborativeAlbumsByArtist,
-  getTracksByArtist,
+    getAlbumsByArtist,
+    getArtistById,
+    getCollaborativeAlbumsByArtist,
+    getTracksByArtist,
 } from "@soundx/services";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function ArtistDetailScreen() {
@@ -115,9 +115,7 @@ export default function ArtistDetailScreen() {
         <View style={styles.header}>
           <Image
             source={{
-              uri: artist.avatar
-                ? `${getBaseURL()}${artist.avatar}`
-                : `https://picsum.photos/seed/${artist.id}/300/300`,
+              uri: getImageUrl(artist.avatar, `https://picsum.photos/seed/${artist.id}/300/300`),
             }}
             style={styles.avatar}
           />
@@ -149,9 +147,7 @@ export default function ArtistDetailScreen() {
                 <View style={styles.albumCoverContainer}>
                   <Image
                     source={{
-                      uri: album.cover
-                        ? `${getBaseURL()}${album.cover}`
-                        : `https://picsum.photos/seed/${album.id}/200/200`,
+                      uri: getImageUrl(album.cover, `https://picsum.photos/seed/${album.id}/200/200`),
                     }}
                     style={styles.albumCover}
                   />
@@ -205,9 +201,7 @@ export default function ArtistDetailScreen() {
                   <View style={styles.albumCoverContainer}>
                     <Image
                       source={{
-                        uri: album.cover
-                          ? `${getBaseURL()}${album.cover}`
-                          : `https://picsum.photos/seed/${album.id}/200/200`,
+                        uri: getImageUrl(album.cover, `https://picsum.photos/seed/${album.id}/200/200`),
                       }}
                       style={styles.albumCover}
                     />
@@ -291,9 +285,7 @@ export default function ArtistDetailScreen() {
                 <View style={styles.trackInfo}>
                   <Image
                     source={{
-                      uri: track.cover
-                        ? `${getBaseURL()}${track.cover}`
-                        : `https://picsum.photos/seed/${track.id}/20/20`,
+                      uri: getImageUrl(track.cover, `https://picsum.photos/seed/${track.id}/20/20`),
                     }}
                     alt=""
                     style={{ width: 20, height: 20 }}

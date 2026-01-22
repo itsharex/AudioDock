@@ -23,8 +23,8 @@ import {
 } from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/context/ThemeContext";
-import { getBaseURL } from "../../src/https";
 import { cacheUtils } from "../../src/utils/cache";
+import { getImageUrl } from "../../src/utils/image";
 import { usePlayMode } from "../../src/utils/playMode";
 
 interface Section {
@@ -345,9 +345,7 @@ export default function HomeScreen() {
                       >
                         <Image
                           source={{
-                            uri: track.cover
-                              ? `${getBaseURL()}${track.cover}`
-                              : `https://picsum.photos/seed/${track.id}/200/200`,
+                            uri: getImageUrl(track.cover, `https://picsum.photos/seed/${track.id}/200/200`),
                           }}
                           style={styles.trackImage}
                         />
@@ -392,9 +390,7 @@ export default function HomeScreen() {
                       >
                         <Image
                           source={{
-                            uri: item.avatar
-                              ? `${getBaseURL()}${item.avatar}`
-                              : `https://picsum.photos/seed/${item.id}/200/200`,
+                            uri: getImageUrl(item.avatar, `https://picsum.photos/seed/${item.id}/200/200`),
                           }}
                           style={styles.artistImage}
                         />
@@ -422,9 +418,7 @@ export default function HomeScreen() {
                         <View style={styles.albumImageContainer}>
                           <Image
                             source={{
-                              uri: item.cover
-                                ? `${getBaseURL()}${item.cover}`
-                                : `https://picsum.photos/seed/${item.id}/200/200`,
+                              uri: getImageUrl(item.cover, `https://picsum.photos/seed/${item.id}/200/200`),
                             }}
                             style={styles.albumImage}
                           />

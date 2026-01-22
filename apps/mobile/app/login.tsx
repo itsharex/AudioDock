@@ -1,12 +1,18 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { check } from "@soundx/services";
+import {
+  check,
+  setServiceConfig,
+  SOURCEMAP,
+  SOURCETIPSMAP,
+} from "@soundx/services";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,9 +24,15 @@ import {
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNativeAdapter } from "../../../packages/services/src/adapter/manager";
+import {
+  useNativeAdapter,
+  useSubsonicAdapter,
+} from "../../../packages/services/src/adapter/manager";
 import { useAuth } from "../src/context/AuthContext";
 import { useTheme } from "../src/context/ThemeContext";
+const logo = require("../assets/images/logo.png");
+const subsonicLogo = require("../assets/images/subsonic.png");
+const embyLogo = require("../assets/images/emby.png");
 
 export default function LoginScreen() {
   const { colors } = useTheme();
@@ -35,14 +47,13 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [statusMessage, setStatusMessage] = useState<"ok" | "error">("error");
+  const [sourceType, setSourceType] = useState<string>("AudioDock");
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([
-    { label: "Local Server", value: "http://localhost:3000" },
-  ]);
+  const [items, setItems] = useState<{ label: string; value: string }[]>([]);
 
   useEffect(() => {
-    loadServerAddress();
-  }, []);
+    loadServerAddress(sourceType);
+  }, [sourceType]);
 
   const checkServerConnectivity = async (address: string) => {
     if (!address) {
@@ -56,11 +67,14 @@ export default function LoginScreen() {
       return;
     }
 
+    const mappedType = SOURCEMAP[sourceType as keyof typeof SOURCEMAP] || "audiodock";
     try {
-      // Configure adapter securely with just URL first to test connectivity
-      // Note: Subsonic ping usually requires auth, so this might fail validation but succeed in network
-      // For now we assume if we are typing a URL, we want to try Subsonic logic if configured
-      useNativeAdapter();
+      // Configure adapter for check
+      if (mappedType === "subsonic") {
+        useSubsonicAdapter();
+      } else {
+        useNativeAdapter();
+      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -69,27 +83,26 @@ export default function LoginScreen() {
       clearTimeout(timeoutId);
       if (response && response.code === 200) {
         setStatusMessage("ok");
-        restoreCredentials(address);
+        restoreCredentials(address, sourceType);
         return;
       }
-      // If code is not 200 but response exists, it might be auth error which means server is reachable
-       if (response) {
-          setStatusMessage("ok"); // Consider reachable
-          restoreCredentials(address);
-          return;
-       }
+      
+      if (mappedType === "subsonic" && response) {
+        setStatusMessage("ok");
+        restoreCredentials(address, sourceType);
+        return;
+      }
 
       throw new Error();
     } catch (error) {
-       // Fallback: If Subsonic check completely fails (network error), maybe try generic fetch?
-       // But for now let's just show error
-       setStatusMessage("error");
+      setStatusMessage("error");
     }
   };
 
-  const restoreCredentials = async (address: string) => {
+  const restoreCredentials = async (address: string, type: string) => {
     try {
-      const savedCreds = await AsyncStorage.getItem(`creds_${address}`);
+      const credsKey = `creds_${type}_${address}`;
+      const savedCreds = await AsyncStorage.getItem(credsKey);
       if (savedCreds) {
         const { username: u, password: p } = JSON.parse(savedCreds);
         setUsername(u || "");
@@ -103,14 +116,18 @@ export default function LoginScreen() {
     }
   };
 
-  const loadServerAddress = async () => {
+  const loadServerAddress = async (type: string) => {
     try {
-      const savedAddress = await AsyncStorage.getItem("serverAddress");
-      const savedHistory = await AsyncStorage.getItem("serverHistory");
+      const addressKey = `serverAddress_${type}`;
+      const historyKey = `serverHistory_${type}`;
+      
+      const savedAddress = await AsyncStorage.getItem(addressKey);
+      const savedHistory = await AsyncStorage.getItem(historyKey);
 
-      let historyItems = [
-        { label: "http://localhost:3000", value: "http://localhost:3000" },
-      ];
+      let historyItems =
+        type === "AudioDock"
+          ? [{ label: "http://localhost:3000", value: "http://localhost:3000" }]
+          : [];
 
       if (savedHistory) {
         historyItems = JSON.parse(savedHistory);
@@ -120,23 +137,28 @@ export default function LoginScreen() {
 
       if (savedAddress) {
         setServerAddress(savedAddress);
-          // Don't auto check immediately to avoid confusing UI state on load
-          // checkServerConnectivity(savedAddress); 
+        restoreCredentials(savedAddress, type);
+      } else {
+        setServerAddress(type === "AudioDock" ? "http://localhost:3000" : "");
+        setUsername("");
+        setPassword("");
+        setStatusMessage("error");
       }
     } catch (error) {
       console.error("Failed to load server address:", error);
     }
   };
 
-  const saveToHistory = async (address: string) => {
+  const saveToHistory = async (address: string, type: string) => {
     if (!address) return;
     try {
-      const currentHistory = await AsyncStorage.getItem("serverHistory");
+      const historyKey = `serverHistory_${type}`;
+      const currentHistory = await AsyncStorage.getItem(historyKey);
       let history = currentHistory ? JSON.parse(currentHistory) : [];
 
       if (!history.find((item: any) => item.value === address)) {
         history.push({ label: address, value: address });
-        await AsyncStorage.setItem("serverHistory", JSON.stringify(history));
+        await AsyncStorage.setItem(historyKey, JSON.stringify(history));
         setItems(history);
       }
     } catch (error) {
@@ -146,11 +168,12 @@ export default function LoginScreen() {
 
   const handleDeleteHistory = async (address: string) => {
     try {
-      const currentHistory = await AsyncStorage.getItem("serverHistory");
+      const historyKey = `serverHistory_${sourceType}`;
+      const currentHistory = await AsyncStorage.getItem(historyKey);
       if (currentHistory) {
         let history = JSON.parse(currentHistory);
         history = history.filter((item: any) => item.value !== address);
-        await AsyncStorage.setItem("serverHistory", JSON.stringify(history));
+        await AsyncStorage.setItem(historyKey, JSON.stringify(history));
         setItems(history);
         if (serverAddress === address) {
           setServerAddress("");
@@ -175,22 +198,35 @@ export default function LoginScreen() {
     
     try {
       setLoading(true);
+      const mappedType = SOURCEMAP[sourceType as keyof typeof SOURCEMAP] || "audiodock";
+      const addressKey = `serverAddress_${sourceType}`;
+      const credsKey = `creds_${sourceType}_${serverAddress}`;
+
       await AsyncStorage.setItem("serverAddress", serverAddress);
-      await saveToHistory(serverAddress);
+      await AsyncStorage.setItem(addressKey, serverAddress);
+      await AsyncStorage.setItem("selectedSourceType", sourceType);
+      await saveToHistory(serverAddress, sourceType);
 
       // Save credentials for this server before logging in/registering
-      // Security Note: Storing plain password is not ideal but standard for Subsonic legacy apps
       await AsyncStorage.setItem(
-        `creds_${serverAddress}`,
+        credsKey,
         JSON.stringify({ username, password }),
       );
 
-      // Configure Adapter with REAL credentials
-      useNativeAdapter();
+      // Configure Adapter and Service with REAL credentials
+      setServiceConfig({ username, password, clientName: "SoundX Mobile" });
+      if (mappedType === "subsonic") {
+        useSubsonicAdapter();
+      } else {
+        useNativeAdapter();
+      }
 
       if (isLogin) {
         await login({ username, password });
       } else {
+        if (mappedType === "subsonic") {
+          throw new Error("Subsonic sourcing does not support registration");
+        }
         await register({ username, password });
       }
 
@@ -224,6 +260,75 @@ export default function LoginScreen() {
             </Text>
 
             <View style={styles.form}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  backgroundColor: colors.card,
+                  borderRadius: 10,
+                  padding: 4,
+                  marginBottom: 10,
+                }}
+              >
+                {Object.keys(SOURCEMAP).map((key) => {
+                  const isActive = sourceType === key;
+                  const isDisabled = key === "Emby";
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      onPress={() => !isDisabled && setSourceType(key)}
+                      disabled={isDisabled}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 8,
+                        alignItems: "center",
+                        backgroundColor: isActive
+                          ? colors.background
+                          : "transparent",
+                        borderRadius: 8,
+                        opacity: isDisabled ? 0.5 : 1,
+                        // Shadow for active item
+                        ...(isActive && {
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.1,
+                          shadowRadius: 2,
+                          elevation: 2,
+                        }),
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {key === "Emby" ? (
+                          <Image source={embyLogo} style={{ width: 20, height: 20, marginRight: 6 }} />
+                        ) : key === "Subsonic" ? (
+                          <Image source={subsonicLogo} style={{ width: 20, height: 20, marginRight: 6 }} />
+                        ) : (
+                          <Image source={logo} style={{ width: 20, height: 20, marginRight: 6 }} />
+                        )}
+                        <Text
+                          style={{
+                            color: isActive ? colors.primary : colors.secondary,
+                            fontWeight: isActive ? "bold" : "normal",
+                            fontSize: 14,
+                          }}
+                        >
+                          {key}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text
+                style={{
+                  color: colors.secondary,
+                  fontSize: 12,
+                  marginBottom: 10,
+                }}
+              >
+                {SOURCETIPSMAP[sourceType as keyof typeof SOURCETIPSMAP]}
+              </Text>
+
               <Text style={[styles.label, { color: colors.text }]}>
                 数据源地址
               </Text>
@@ -301,7 +406,7 @@ export default function LoginScreen() {
 
                                 // For custom items (not in history), save them
                                 if (!isPersistent) {
-                                  saveToHistory(value);
+                                  saveToHistory(value, sourceType);
                                 }
                               }
 
@@ -435,7 +540,11 @@ export default function LoginScreen() {
                 onPress={() => setIsLogin(!isLogin)}
               >
                 <Text style={[styles.switchText, { color: colors.secondary }]}>
-                  {isLogin ? "没有账号？注册" : "已有账号？登录"}
+                  {sourceType === "AudioDock"
+                    ? isLogin
+                      ? "没有账号？注册"
+                      : "已有账号？登录"
+                    : "AudioDock 听见你的声音"}
                 </Text>
               </TouchableOpacity>
             </View>
