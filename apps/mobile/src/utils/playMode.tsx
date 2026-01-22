@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 export type PlayMode = "MUSIC" | "AUDIOBOOK";
 
@@ -19,10 +20,15 @@ export const PlayModeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [mode, setModeState] = useState<PlayMode>("MUSIC");
+  const { sourceType } = useAuth();
 
   useEffect(() => {
-    loadMode();
-  }, []);
+    if (sourceType === "Subsonic") {
+      setModeState("MUSIC");
+    } else {
+      loadMode();
+    }
+  }, [sourceType]);
 
   const loadMode = async () => {
     try {

@@ -2,13 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../src/context/AuthContext";
@@ -22,7 +22,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { colors, theme, toggleTheme } = useTheme();
   const { mode, setMode } = usePlayMode();
-  const { logout, user } = useAuth();
+  const { logout, user, sourceType } = useAuth();
   const {
     acceptRelay,
     acceptSync,
@@ -151,12 +151,12 @@ export default function SettingsScreen() {
             (val) => updateSetting("autoOrientation", val)
           )}
 
-          {renderSettingRow(
-            "有声书模式",
-            "切换音乐与有声书的显示内容",
-            mode === "AUDIOBOOK",
-            (val) => setMode(val ? "AUDIOBOOK" : "MUSIC")
-          )}
+{sourceType !== "Subsonic" && renderSettingRow(
+  "有声书模式",
+  "切换音乐与有声书的显示内容",
+  mode === "AUDIOBOOK",
+  (val) => setMode(val ? "AUDIOBOOK" : "MUSIC")
+)}
 
           {renderSettingRow(
             "接力播放",

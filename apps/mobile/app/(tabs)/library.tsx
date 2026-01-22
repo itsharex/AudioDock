@@ -15,6 +15,7 @@ import {
     View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { Album, Artist } from "../../src/models";
 import { getImageUrl } from "../../src/utils/image";
@@ -336,10 +337,11 @@ const AlbumList = () => {
 };
 
 export default function LibraryScreen() {
-  const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
+  const { colors, theme } = useTheme();
   const router = useRouter();
   const { mode, setMode } = usePlayMode();
+  const { sourceType } = useAuth();
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"artists" | "albums">("artists");
 
   return (
@@ -367,19 +369,21 @@ export default function LibraryScreen() {
           >
             <Ionicons name="search" size={20} color={colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setMode(mode === "MUSIC" ? "AUDIOBOOK" : "MUSIC")}
-            style={[
-              styles.iconButton,
-              { backgroundColor: colors.card, marginLeft: 12 },
-            ]}
-          >
-            <Ionicons
-              name={mode === "MUSIC" ? "musical-notes" : "headset"}
-              size={20}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
+          {sourceType !== "Subsonic" && (
+            <TouchableOpacity
+              onPress={() => setMode(mode === "MUSIC" ? "AUDIOBOOK" : "MUSIC")}
+              style={[
+                styles.iconButton,
+                { backgroundColor: colors.card, marginLeft: 12 },
+              ]}
+            >
+              <Ionicons
+                name={mode === "MUSIC" ? "musical-notes" : "headset"}
+                size={20}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

@@ -22,6 +22,7 @@ import {
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { cacheUtils } from "../../src/utils/cache";
 import { getImageUrl } from "../../src/utils/image";
@@ -38,6 +39,7 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const { playTrack } = usePlayer();
   const { mode, setMode } = usePlayMode();
+  const { sourceType } = useAuth();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -289,16 +291,18 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>推荐</Text>
           <View style={styles.headerRight}>
-            <TouchableOpacity
-              onPress={() => setMode(mode === "MUSIC" ? "AUDIOBOOK" : "MUSIC")}
-              style={[styles.modeToggle, { backgroundColor: colors.card }]}
-            >
-              <Ionicons
-                name={mode === "MUSIC" ? "musical-notes" : "headset"}
-                size={20}
-                color={colors.primary}
-              />
-            </TouchableOpacity>
+            {sourceType !== "Subsonic" && (
+              <TouchableOpacity
+                onPress={() => setMode(mode === "MUSIC" ? "AUDIOBOOK" : "MUSIC")}
+                style={[styles.modeToggle, { backgroundColor: colors.card }]}
+              >
+                <Ionicons
+                  name={mode === "MUSIC" ? "musical-notes" : "headset"}
+                  size={20}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
