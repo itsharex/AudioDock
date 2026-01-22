@@ -98,6 +98,43 @@ export class SubsonicAlbumAdapter implements IAlbumAdapter {
     return this.response(mapSubsonicAlbumToAlbum(res.album, (id) => this.client.getCoverUrl(id)));
   }
 
+    private formatLyrics(lyricsRes: any): string | null {
+        if (!lyricsRes) return null;
+        
+        const structured = lyricsRes.lyricsList?.structuredLyrics?.[0];
+        if (structured && structured.line) {
+            return structured.line.map((l: any) => {
+                const totalMs = l.start || 0;
+                const minutes = Math.floor(totalMs / 60000);
+                const seconds = Math.floor((totalMs % 60000) / 1000);
+                const ms = totalMs % 1000;
+                const timestamp = `[${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}]`;
+                return `${timestamp}${l.value || ''}`;
+            }).join('\n');
+        }
+        
+        const lyricsData = lyricsRes.lyrics;
+        return lyricsData?.value || lyricsData?.["$"] || (typeof lyricsData === 'string' ? lyricsData : null);
+    }
+
+  private async mapTracksWithLyrics(songs: any[]): Promise<any[]> {
+    return Promise.all(songs.map(async s => {
+        let lyrics = null;
+        try {
+            if (s.artist && s.title) {
+                const lyricsRes = await this.client.get<any>("getLyricsBySongId", { 
+                    id: s.id,
+                }).catch(() => null);
+                
+                if (lyricsRes) {
+                    lyrics = this.formatLyrics(lyricsRes);
+                }
+            }
+        } catch (e) {}
+        return mapSubsonicSongToTrack(s, (id) => this.client.getCoverUrl(id), (id) => this.client.getStreamUrl(id), lyrics);
+    }));
+  }
+
   async getAlbumTracks(
     id: number | string,
     pageSize: number,
@@ -117,7 +154,7 @@ export class SubsonicAlbumAdapter implements IAlbumAdapter {
     // minimal sort support
     // pagination
     songs = songs.slice(skip, skip + pageSize);
-    const list = songs.map(s => mapSubsonicSongToTrack(s, (id) => this.client.getCoverUrl(id), (id) => this.client.getStreamUrl(id)));
+    const list = await this.mapTracksWithLyrics(songs);
     
     return this.response({
         list,

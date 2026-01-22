@@ -14,20 +14,60 @@ export class SubsonicPlaylistAdapter implements IPlaylistAdapter {
     };
   }
 
+  private formatLyrics(lyricsRes: any): string | null {
+    if (!lyricsRes) return null;
+    
+    // Check for OpenSubsonic structuredLyrics
+    const structured = lyricsRes.lyricsList?.structuredLyrics?.[0];
+    if (structured && structured.line) {
+        return structured.line.map((l: any) => {
+            const totalMs = l.start || 0;
+            const minutes = Math.floor(totalMs / 60000);
+            const seconds = Math.floor((totalMs % 60000) / 1000);
+            const ms = totalMs % 1000;
+            // Format: [mm:ss.SS]
+            const timestamp = `[${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}]`;
+            return `${timestamp}${l.value || ''}`;
+        }).join('\n');
+    }
+    
+    // Check for plain lyrics (older Subsonic)
+    const lyricsData = lyricsRes.lyrics;
+    return lyricsData?.value || lyricsData?.["$"] || (typeof lyricsData === 'string' ? lyricsData : null);
+  }
+
+  private async mapTracksWithLyrics(songs: any[]): Promise<any[]> {
+    return Promise.all(songs.map(async s => {
+        let lyrics = null;
+        try {
+            if (s.artist && s.title) {
+                const lyricsRes = await this.client.get<any>("getLyricsBySongId", { 
+                    id: s.id,
+                }).catch(() => null);
+                
+                if (lyricsRes) {
+                    lyrics = this.formatLyrics(lyricsRes);
+                }
+            }
+        } catch (e) {}
+        return mapSubsonicSongToTrack(s, (id) => this.client.getCoverUrl(id), (id) => this.client.getStreamUrl(id), lyrics);
+    }));
+  }
+
   async createPlaylist(name: string, type: "MUSIC" | "AUDIOBOOK", userId: number | string): Promise<ISuccessResponse<Playlist>> {
     const res = await this.client.get<{ playlist: any }>("createPlaylist", { name });
-    return this.response(this.mapPlaylist(res.playlist));
+    return this.response(await this.mapPlaylist(res.playlist));
   }
 
   async getPlaylists(type?: "MUSIC" | "AUDIOBOOK", userId?: number | string): Promise<ISuccessResponse<Playlist[]>> {
     const res = await this.client.get<{ playlists: { playlist: any[] } }>("getPlaylists");
-    const list = (res.playlists?.playlist || []).map(p => this.mapPlaylist(p));
+    const list = await Promise.all((res.playlists?.playlist || []).map(p => this.mapPlaylist(p)));
     return this.response(list);
   }
 
   async getPlaylistById(id: number | string): Promise<ISuccessResponse<Playlist>> {
     const res = await this.client.get<{ playlist: any }>("getPlaylist", { id: id.toString() });
-    return this.response(this.mapPlaylist(res.playlist));
+    return this.response(await this.mapPlaylist(res.playlist));
   }
 
   async updatePlaylist(id: number | string, name: string): Promise<ISuccessResponse<Playlist>> {
@@ -63,8 +103,8 @@ export class SubsonicPlaylistAdapter implements IPlaylistAdapter {
     return this.response(false);
   }
 
-  private mapPlaylist(p: any): Playlist {
-    const tracks = (p.entry || []).map((s: any) => mapSubsonicSongToTrack(s, (id) => this.client.getCoverUrl(id), (id) => this.client.getStreamUrl(id)));
+  private async mapPlaylist(p: any): Promise<Playlist> {
+    const tracks = await this.mapTracksWithLyrics(p.entry || []);
     
     return {
       id: p.id,

@@ -4,7 +4,8 @@ import { SubsonicAlbum, SubsonicArtist, SubsonicChild } from "./types";
 export const mapSubsonicSongToTrack = (
   song: SubsonicChild, 
   coverUrlBuilder: (id: string) => string,
-  streamUrlBuilder: (id: string) => string
+  streamUrlBuilder: (id: string) => string,
+  lyrics: string | null = null
 ): Track => {
   return {
     id: song.id || 0,
@@ -28,7 +29,7 @@ export const mapSubsonicSongToTrack = (
     },
     cover: song.coverArt ? coverUrlBuilder(song.coverArt) : null,
     duration: song.duration || 0,
-    lyrics: null,
+    lyrics,
     index: song.track || null,
     type: TrackType.MUSIC,
     createdAt: song.created || new Date().toISOString(),
