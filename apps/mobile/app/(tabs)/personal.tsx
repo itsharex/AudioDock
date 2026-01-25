@@ -952,6 +952,21 @@ export default function PersonalScreen() {
               {importTask?.current || 0} 个
             </Text>
 
+            {importTask?.currentFileName && (
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="middle"
+                style={{
+                  color: colors.secondary,
+                  fontSize: 11,
+                  marginBottom: 10,
+                  fontStyle: "italic",
+                }}
+              >
+                正在处理: {importTask.currentFileName}
+              </Text>
+            )}
+
             {importTask?.status === TaskStatus.SUCCESS ||
             importTask?.status === TaskStatus.FAILED ? (
               <TouchableOpacity

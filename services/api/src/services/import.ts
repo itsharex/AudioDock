@@ -21,6 +21,7 @@ export interface ImportTask {
   message?: string;
   total?: number;
   current?: number;
+  currentFileName?: string;
   mode?: 'incremental' | 'full';
 }
 
@@ -121,11 +122,6 @@ export class ImportService {
 
       task.status = TaskStatus.PARSING;
 
-      // Scan Music
-      const musicResults = await scanner.scanMusic(musicPath);
-      // Scan Audiobooks
-      const audiobookResults = await scanner.scanAudiobook(audiobookPath);
-
       // Cache for folder IDs to reduce DB queries
       const folderCache = new Map<string, number>();
 
@@ -197,10 +193,7 @@ export class ImportService {
             });
           }
 
-          // 3. Handle Folder (Already computed above)
-          // const folderId = await this.getOrCreateFolderHierarchically(path.dirname(item.path), audioBasePath, type);
-
-          // 4. Create Track
+          // 3. Create Track
           const newTrack = await this.trackService.createTrack({
             name: item.title || path.basename(item.path),
             artist: artistName,
@@ -225,17 +218,17 @@ export class ImportService {
         task.current = (task.current || 0) + 1;
       };
 
-      // Save Music (sequential to avoid duplicate creation)
-      for (const [index, item] of musicResults.entries()) {
-        console.log("music", item);
-        await processItem(item || {}, TrackType.MUSIC, musicPath, index);
-      }
+      // Scan & Save Music
+      await scanner.scanMusic(musicPath, async (item) => {
+        task.currentFileName = item.title || path.basename(item.path);
+        await processItem(item || {}, TrackType.MUSIC, musicPath, task.current || 0);
+      });
 
-      // Save Audiobooks (sequential to avoid duplicate creation)
-      for (const [index, item] of audiobookResults.entries()) {
-        console.log("audiobook", item);
-        await processItem(item || {}, TrackType.AUDIOBOOK, audiobookPath, index);
-      }
+      // Scan & Save Audiobooks
+      await scanner.scanAudiobook(audiobookPath, async (item) => {
+        task.currentFileName = item.title || path.basename(item.path);
+        await processItem(item || {}, TrackType.AUDIOBOOK, audiobookPath, task.current || 0);
+      });
 
 
       task.status = TaskStatus.SUCCESS;

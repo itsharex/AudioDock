@@ -14,6 +14,7 @@ export interface ImportTask {
   message?: string;
   total?: number;
   current?: number;
+  currentFileName?: string;
 }
 
 export interface CreateTaskParams {

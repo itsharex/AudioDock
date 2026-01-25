@@ -28,9 +28,11 @@
   },
   "dependencies": {
     "dayjs": "^1.11.19",
+    "iconv-lite": "^0.7.2",
     "music-metadata": "^7.14.0"
   },
   "devDependencies": {
+    "@types/node": "^25.0.10",
     "father": "^4.5.3"
   }
 }

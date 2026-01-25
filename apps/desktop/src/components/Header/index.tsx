@@ -1,51 +1,51 @@
 import {
-  CustomerServiceOutlined,
-  DatabaseOutlined,
-  DeleteOutlined,
-  FolderOutlined,
-  GithubOutlined,
-  HeartOutlined,
-  ImportOutlined,
-  LeftOutlined,
-  LogoutOutlined,
-  ReadOutlined,
-  ReloadOutlined,
-  RetweetOutlined,
-  RightOutlined,
-  RollbackOutlined,
-  SearchOutlined,
-  SettingOutlined,
+    CustomerServiceOutlined,
+    DatabaseOutlined,
+    DeleteOutlined,
+    FolderOutlined,
+    GithubOutlined,
+    HeartOutlined,
+    ImportOutlined,
+    LeftOutlined,
+    LogoutOutlined,
+    ReadOutlined,
+    ReloadOutlined,
+    RetweetOutlined,
+    RightOutlined,
+    RollbackOutlined,
+    SearchOutlined,
+    SettingOutlined,
 } from "@ant-design/icons";
 import {
-  addSearchRecord,
-  check,
-  clearSearchHistory,
-  createImportTask,
-  getHotSearches,
-  getImportTask,
-  getRunningImportTask,
-  getSearchHistory,
-  searchAll,
-  setServiceConfig,
-  SOURCEMAP,
-  SOURCETIPSMAP,
-  TaskStatus,
-  useNativeAdapter,
-  useSubsonicAdapter,
-  type ImportTask,
-  type SearchResults as SearchResultsType,
+    addSearchRecord,
+    check,
+    clearSearchHistory,
+    createImportTask,
+    getHotSearches,
+    getImportTask,
+    getRunningImportTask,
+    getSearchHistory,
+    searchAll,
+    setServiceConfig,
+    SOURCEMAP,
+    SOURCETIPSMAP,
+    TaskStatus,
+    useNativeAdapter,
+    useSubsonicAdapter,
+    type ImportTask,
+    type SearchResults as SearchResultsType,
 } from "@soundx/services";
 import {
-  Button,
-  Flex,
-  Input,
-  Modal,
-  Popover,
-  Progress,
-  Segmented,
-  theme,
-  Tooltip,
-  Typography,
+    Button,
+    Flex,
+    Input,
+    Modal,
+    Popover,
+    Progress,
+    Segmented,
+    theme,
+    Tooltip,
+    Typography,
 } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -703,6 +703,21 @@ const Header: React.FC = () => {
             共检测到 {importTask?.total || 0} 个音频文件，已经入库{" "}
             {importTask?.current || 0} 个
           </div>
+          {importTask?.currentFileName && (
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 12,
+                color: token.colorTextTertiary,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontStyle: "italic",
+              }}
+            >
+              正在处理: {importTask.currentFileName}
+            </div>
+          )}
         </div>
       </Modal>
 

@@ -172,7 +172,7 @@ importers:
         version: 7.28.5
       '@tarojs/cli':
         specifier: 3.6.34
-        version: 3.6.34(@tarojs/taro@3.6.34(@tarojs/helper@3.6.34)(@tarojs/runtime@3.6.34(@tarojs/shared@3.6.34))(@types/react@18.3.27)(postcss@8.5.6))(@types/node@24.10.1)
+        version: 3.6.34(@tarojs/taro@3.6.34(@tarojs/helper@3.6.34)(@tarojs/runtime@3.6.34(@tarojs/shared@3.6.34))(@types/react@18.3.27)(postcss@8.5.6))(@types/node@25.0.10)
       '@tarojs/mini-runner':
         specifier: 3.6.34
         version: 3.6.34(@tarojs/components@3.6.34(@tarojs/helper@3.6.34)(@tarojs/runtime@3.6.34(@tarojs/shared@3.6.34))(@tarojs/shared@3.6.34)(@types/react@18.3.27)(postcss@8.5.6)(react@18.3.1))(@tarojs/runtime@3.6.34(@tarojs/shared@3.6.34))(@tarojs/shared@3.6.34)(@tarojs/taro@3.6.34(@tarojs/helper@3.6.34)(@tarojs/runtime@3.6.34(@tarojs/shared@3.6.34))(@types/react@18.3.27)(postcss@8.5.6))(@types/react@18.3.27)(postcss@8.5.6)
@@ -409,7 +409,7 @@ importers:
     devDependencies:
       father:
         specifier: ^4.5.3
-        version: 4.5.5(@babel/core@7.28.5)(@types/node@24.10.1)(styled-components@6.1.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(type-fest@4.41.0)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6)
+        version: 4.5.5(@babel/core@7.28.5)(@types/node@25.0.10)(styled-components@6.1.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(type-fest@4.41.0)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6)
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
@@ -430,13 +430,19 @@ importers:
       dayjs:
         specifier: ^1.11.19
         version: 1.11.19
+      iconv-lite:
+        specifier: ^0.7.2
+        version: 0.7.2
       music-metadata:
         specifier: ^7.14.0
         version: 7.14.0
     devDependencies:
+      '@types/node':
+        specifier: ^25.0.10
+        version: 25.0.10
       father:
         specifier: ^4.5.3
-        version: 4.5.5(@babel/core@7.28.5)(@types/node@24.10.1)(styled-components@6.1.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(type-fest@4.41.0)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6)
+        version: 4.5.5(@babel/core@7.28.5)(@types/node@25.0.10)(styled-components@6.1.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(type-fest@4.41.0)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6)
 
   packages/ws:
     dependencies:
@@ -446,7 +452,7 @@ importers:
     devDependencies:
       father:
         specifier: ^4.5.3
-        version: 4.5.5(@babel/core@7.28.5)(@types/node@24.10.1)(styled-components@6.1.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(type-fest@4.41.0)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6)
+        version: 4.5.5(@babel/core@7.28.5)(@types/node@25.0.10)(styled-components@6.1.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(type-fest@4.41.0)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6)
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
@@ -4100,6 +4106,9 @@ packages:
 
   '@types/node@24.10.1':
     resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
+
+  '@types/node@25.0.10':
+    resolution: {integrity: sha512-zWW5KPngR/yvakJgGOmZ5vTBemDoSqF3AcV/LrO5u5wTWyEAVVh+IT39G4gtyAkh3CtTZs8aX/yRM82OfzHJRg==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -15802,12 +15811,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.15.21
 
-  '@inquirer/external-editor@1.0.3(@types/node@24.10.1)':
+  '@inquirer/external-editor@1.0.3(@types/node@25.0.10)':
     dependencies:
       chardet: 2.1.1
       iconv-lite: 0.7.2
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 25.0.10
 
   '@inquirer/figures@1.0.12': {}
 
@@ -16160,23 +16169,23 @@ snapshots:
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
 
-  '@microsoft/api-extractor-model@7.28.17(@types/node@24.10.1)':
+  '@microsoft/api-extractor-model@7.28.17(@types/node@25.0.10)':
     dependencies:
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 4.3.0(@types/node@24.10.1)
+      '@rushstack/node-core-library': 4.3.0(@types/node@25.0.10)
     transitivePeerDependencies:
       - '@types/node'
 
-  '@microsoft/api-extractor@7.43.7(@types/node@24.10.1)':
+  '@microsoft/api-extractor@7.43.7(@types/node@25.0.10)':
     dependencies:
-      '@microsoft/api-extractor-model': 7.28.17(@types/node@24.10.1)
+      '@microsoft/api-extractor-model': 7.28.17(@types/node@25.0.10)
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 4.3.0(@types/node@24.10.1)
+      '@rushstack/node-core-library': 4.3.0(@types/node@25.0.10)
       '@rushstack/rig-package': 0.5.2
-      '@rushstack/terminal': 0.11.0(@types/node@24.10.1)
-      '@rushstack/ts-command-line': 4.21.0(@types/node@24.10.1)
+      '@rushstack/terminal': 0.11.0(@types/node@25.0.10)
+      '@rushstack/ts-command-line': 4.21.0(@types/node@25.0.10)
       lodash: 4.17.21
       minimatch: 3.0.8
       resolve: 1.22.10
@@ -17128,7 +17137,7 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@rushstack/node-core-library@4.3.0(@types/node@24.10.1)':
+  '@rushstack/node-core-library@4.3.0(@types/node@25.0.10)':
     dependencies:
       fs-extra: 7.0.1
       import-lazy: 4.0.0
@@ -17137,23 +17146,23 @@ snapshots:
       semver: 7.5.4
       z-schema: 5.0.5
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 25.0.10
 
   '@rushstack/rig-package@0.5.2':
     dependencies:
       resolve: 1.22.10
       strip-json-comments: 3.1.1
 
-  '@rushstack/terminal@0.11.0(@types/node@24.10.1)':
+  '@rushstack/terminal@0.11.0(@types/node@25.0.10)':
     dependencies:
-      '@rushstack/node-core-library': 4.3.0(@types/node@24.10.1)
+      '@rushstack/node-core-library': 4.3.0(@types/node@25.0.10)
       supports-color: 8.1.1
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 25.0.10
 
-  '@rushstack/ts-command-line@4.21.0(@types/node@24.10.1)':
+  '@rushstack/ts-command-line@4.21.0(@types/node@25.0.10)':
     dependencies:
-      '@rushstack/terminal': 0.11.0(@types/node@24.10.1)
+      '@rushstack/terminal': 0.11.0(@types/node@25.0.10)
       '@types/argparse': 1.0.38
       argparse: 1.0.10
       string-argv: 0.3.2
@@ -17491,7 +17500,7 @@ snapshots:
       '@tarojs/binding-linux-x64-gnu': 3.6.34
       '@tarojs/binding-win32-x64-msvc': 3.6.34
 
-  '@tarojs/cli@3.6.34(@tarojs/taro@3.6.34(@tarojs/helper@3.6.34)(@tarojs/runtime@3.6.34(@tarojs/shared@3.6.34))(@types/react@18.3.27)(postcss@8.5.6))(@types/node@24.10.1)':
+  '@tarojs/cli@3.6.34(@tarojs/taro@3.6.34(@tarojs/helper@3.6.34)(@tarojs/runtime@3.6.34(@tarojs/shared@3.6.34))(@types/react@18.3.27)(postcss@8.5.6))(@types/node@25.0.10)':
     dependencies:
       '@tarojs/binding': 3.6.34
       '@tarojs/helper': 3.6.34
@@ -17505,7 +17514,7 @@ snapshots:
       envinfo: 7.21.0
       eslint: 8.57.1
       glob: 7.2.3
-      inquirer: 8.2.7(@types/node@24.10.1)
+      inquirer: 8.2.7(@types/node@25.0.10)
       latest-version: 5.1.0
       lodash: 4.17.21
       minimist: 1.2.8
@@ -18250,6 +18259,10 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/node@24.10.1':
+    dependencies:
+      undici-types: 7.16.0
+
+  '@types/node@25.0.10':
     dependencies:
       undici-types: 7.16.0
 
@@ -21855,7 +21868,7 @@ snapshots:
       '@typescript-eslint/eslint-plugin': 8.47.0(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3)
       '@typescript-eslint/parser': 8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3)
       eslint: 9.39.1(jiti@2.4.2)
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.1(jiti@2.4.2))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint@9.39.1(jiti@2.4.2)))(eslint@9.39.1(jiti@2.4.2))
       eslint-plugin-expo: 1.0.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3)
       eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.4.2))
       eslint-plugin-react: 7.37.5(eslint@9.39.1(jiti@2.4.2))
@@ -21889,7 +21902,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.1(jiti@2.4.2)):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint@9.39.1(jiti@2.4.2)))(eslint@9.39.1(jiti@2.4.2)):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.1
@@ -21904,14 +21917,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.4.2)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint@9.39.1(jiti@2.4.2)))(eslint@9.39.1(jiti@2.4.2)))(eslint@9.39.1(jiti@2.4.2)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3)
       eslint: 9.39.1(jiti@2.4.2)
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.1(jiti@2.4.2))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint@9.39.1(jiti@2.4.2)))(eslint@9.39.1(jiti@2.4.2))
     transitivePeerDependencies:
       - supports-color
 
@@ -21935,7 +21948,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.1(jiti@2.4.2)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.4.2))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.47.0(eslint@9.39.1(jiti@2.4.2))(typescript@5.9.3))(eslint@9.39.1(jiti@2.4.2)))(eslint@9.39.1(jiti@2.4.2)))(eslint@9.39.1(jiti@2.4.2))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -22711,9 +22724,9 @@ snapshots:
     dependencies:
       reusify: 1.1.0
 
-  father@4.5.5(@babel/core@7.28.5)(@types/node@24.10.1)(styled-components@6.1.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(type-fest@4.41.0)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6):
+  father@4.5.5(@babel/core@7.28.5)(@types/node@25.0.10)(styled-components@6.1.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(type-fest@4.41.0)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6):
     dependencies:
-      '@microsoft/api-extractor': 7.43.7(@types/node@24.10.1)
+      '@microsoft/api-extractor': 7.43.7(@types/node@25.0.10)
       '@umijs/babel-preset-umi': 4.4.11
       '@umijs/bundler-utils': 4.4.11
       '@umijs/bundler-webpack': 4.4.11(type-fest@4.41.0)(typescript@5.4.2)(webpack-dev-server@4.11.1(webpack@5.99.6))(webpack@5.99.6)
@@ -23831,9 +23844,9 @@ snapshots:
       strip-ansi: 6.0.1
       through: 2.3.8
 
-  inquirer@8.2.7(@types/node@24.10.1):
+  inquirer@8.2.7(@types/node@25.0.10):
     dependencies:
-      '@inquirer/external-editor': 1.0.3(@types/node@24.10.1)
+      '@inquirer/external-editor': 1.0.3(@types/node@25.0.10)
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       cli-cursor: 3.1.0

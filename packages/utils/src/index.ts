@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as iconv from 'iconv-lite';
 import * as music from 'music-metadata';
 import * as path from 'path';
 
@@ -22,20 +23,23 @@ export class LocalMusicScanner {
     }
   }
 
-  async scanMusic(dir: string): Promise<ScanResult[]> {
+  async scanMusic(dir: string, onFile?: (result: ScanResult) => Promise<void>): Promise<ScanResult[]> {
     const results: ScanResult[] = [];
     if (!fs.existsSync(dir)) return results;
 
     await this.traverse(dir, async (filePath) => {
       const metadata = await this.parseFile(filePath);
       if (metadata) {
+        if (onFile) {
+          await onFile(metadata);
+        }
         results.push(metadata);
       }
     });
     return results;
   }
 
-  async scanAudiobook(dir: string): Promise<ScanResult[]> {
+  async scanAudiobook(dir: string, onFile?: (result: ScanResult) => Promise<void>): Promise<ScanResult[]> {
     const results: ScanResult[] = [];
     if (!fs.existsSync(dir)) return results;
 
@@ -58,6 +62,9 @@ export class LocalMusicScanner {
           }
         }
 
+        if (onFile) {
+          await onFile(metadata);
+        }
         results.push(metadata);
       }
     });
@@ -165,14 +172,28 @@ export class LocalMusicScanner {
         lyrics = lyrics.replace(/\u0000/g, '');
       }
 
+      let title = common.title;
+      let artist = common.artist || common.album;
+      let album = common.album;
+
+      // Fix encoding if garbled
+      title = this.fixEncoding(title || '');
+      artist = this.fixEncoding(artist || '');
+      album = this.fixEncoding(album || '');
+
+      // Fallback to filename if title is missing or still garbled
+      if (!title || this.isGarbled(title)) {
+        title = path.basename(filePath, path.extname(filePath));
+      }
+
       return {
         path: filePath,
         size: fs.statSync(filePath).size,
         mtime: fs.statSync(filePath).mtime,
         ...common,
-        title: common.title || path.basename(filePath, path.extname(filePath)),
-        artist: common.artist || common.album,
-        album: common.album,
+        title,
+        artist: artist || '未知',
+        album: album || '未知',
         duration: metadata.format.duration,
         coverPath: coverPath || undefined,
         lyrics: lyrics || undefined,
@@ -227,6 +248,38 @@ export class LocalMusicScanner {
     }
 
     return null;
+  }
+
+  private isGarbled(str: string): boolean {
+    if (!str) return false;
+    // Check for control characters (except tab, newline, carriage return)
+    const controlChars = /[\u0000-\u0008\u000b-\u000c\u000e-\u001f\u007f]/;
+    if (controlChars.test(str)) return true;
+
+    // Check for "REPLACEMENT CHARACTER" (U+FFFD)
+    if (str.includes('\uFFFD')) return true;
+
+    return false;
+  }
+
+  private fixEncoding(str: string): string {
+    if (!str) return str;
+    if (!this.isGarbled(str)) return str;
+
+    try {
+      // Try to convert back to buffer using ISO-8859-1 (raw bytes)
+      // and then decode as GBK
+      const buf = iconv.encode(str, 'latin1');
+      const decoded = iconv.decode(buf, 'gbk');
+
+      // If the decoded string doesn't look garbled, use it
+      if (decoded && !this.isGarbled(decoded)) {
+        return decoded;
+      }
+    } catch (e) {
+      // Ignore
+    }
+    return str;
   }
 }
 
