@@ -29,10 +29,11 @@ interface SectionItem {
 }
 
 const DEFAULT_SECTIONS: SectionItem[] = [
+  { id: "history", title: "继续收听（有声书模式）" },
   { id: "artists", title: "艺术家" },
   { id: "recent", title: "最近上新" },
   { id: "recommended", title: "为你推荐" },
-  { id: "tracks", title: "上新单曲" },
+  { id: "tracks", title: "上新单曲（音乐模式）" },
 ];
 
 const ITEM_HEIGHT = 70; // Fixed height for smoother calculations

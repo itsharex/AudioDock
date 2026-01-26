@@ -1,28 +1,34 @@
-import { SettingOutlined, SyncOutlined } from "@ant-design/icons";
+import { EnterOutlined, HeartOutlined, PlayCircleOutlined, SettingOutlined, SyncOutlined } from "@ant-design/icons";
 import {
+  getAlbumHistory,
   getLatestArtists,
   getLatestTracks,
   getRecentAlbums,
   getRecommendedAlbums,
+  toggleTrackLike,
+  toggleTrackUnLike,
 } from "@soundx/services";
 import { useDebounceFn } from "ahooks";
-import { Avatar, Button, Col, Flex, Row, Skeleton, Typography } from "antd";
+import { Avatar, Button, Col, Flex, Row, Skeleton, theme, Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cover from "../../components/Cover/index";
 import { getBaseURL } from "../../https";
 import type { Album, Artist, Track } from "../../models";
+import { useAuthStore } from "../../store/auth";
+import { usePlayerStore } from "../../store/player";
 import { cacheUtils } from "../../utils/cache";
 import { usePlayMode } from "../../utils/playMode";
 import styles from "./index.module.less";
 import SectionOrderModal from "./SectionOrderModal";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const CACHE_KEY_RECOMMENDED = "recommended_albums";
 const CACHE_KEY_RECENT = "recent_albums";
 const CACHE_KEY_ARTISTS = "latest_artists";
 const CACHE_KEY_TRACKS = "latest_tracks";
+const CACHE_KEY_HISTORY = "history_albums";
 const STORAGE_KEY_ORDER = "recommended_section_order";
 
 interface RecommendedSection {
@@ -38,6 +44,12 @@ const Recommended: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState<string | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+
+  // Get current auth state
+  const { user } = useAuthStore();
+  const { play, setPlaylist } = usePlayerStore();
+
+  const { token: themeToken } = theme.useToken();
 
   // Get current play mode from localStorage
   const { mode: playMode } = usePlayMode();
@@ -92,7 +104,16 @@ const Recommended: React.FC = () => {
     const width = window.innerWidth;
     // Sidebar 200 + Padding 60 (30*2)
     const availableWidth = width - 200 - 60;
-    // Album/Track: 170 + 24 (gap) = 194
+
+    if (type === "track") {
+      // Track cards: 250px width + 12px gap
+      const itemWidth = 240 + 12;
+      const itemsPerRow = Math.floor(availableWidth / itemWidth);
+      // 2 rows, so multiply by 2
+      return Math.max(6, itemsPerRow * 2);
+    }
+
+    // Album: 170 + 24 (gap) = 194
     // Artist: 110 + 24 (gap) = 134
     const itemWidth = type === "artist" ? 134 : 194;
     return Math.max(4, Math.floor(availableWidth / itemWidth));
@@ -106,6 +127,7 @@ const Recommended: React.FC = () => {
       let recentAlbums: Album[] = [];
       let latestArtists: Artist[] = [];
       let latestTracks: Track[] = [];
+      let historyAlbums: Album[] = [];
 
       // Try to get from cache first
       if (!forceRefresh) {
@@ -128,6 +150,12 @@ const Recommended: React.FC = () => {
           latestArtists = cachedArtists;
           if (playMode === "MUSIC" && cachedTracks) {
             latestTracks = cachedTracks;
+          }
+          const cachedHistory = cacheUtils.get<Album[]>(
+            getCacheKey(CACHE_KEY_HISTORY),
+          );
+          if (playMode === "AUDIOBOOK" && cachedHistory) {
+            historyAlbums = cachedHistory;
           }
 
           const newSections: RecommendedSection[] = [
@@ -160,6 +188,15 @@ const Recommended: React.FC = () => {
             });
           }
 
+          if (playMode === "AUDIOBOOK" && historyAlbums.length > 0) {
+            newSections.push({
+              id: "history",
+              title: "继续收听",
+              items: historyAlbums,
+              type: "album",
+            });
+          }
+
           setSections(sortSections(newSections));
           setLoading(false);
           return;
@@ -182,16 +219,23 @@ const Recommended: React.FC = () => {
         promises.push(getLatestTracks("MUSIC", true, trackSize));
       }
 
+      if (playMode === "AUDIOBOOK" && user) {
+        promises.push(getAlbumHistory(user.id, 0, albumSize, "AUDIOBOOK"));
+      }
+
       const results = await Promise.all(promises);
       const recommendedRes = results[0];
       const recentRes = results[1];
       const artistsRes = results[2];
       const tracksRes = playMode === "MUSIC" ? results[3] : null;
+      const historyRes = playMode === "AUDIOBOOK" && user ? results[3] : null;
 
       recommendedAlbums = recommendedRes.data || [];
       recentAlbums = recentRes.data || [];
       latestArtists = artistsRes.data || [];
       latestTracks = tracksRes?.data || [];
+      historyAlbums =
+        historyRes?.data?.list?.map((item: any) => item.album) || [];
 
       const newSections: RecommendedSection[] = [
         {
@@ -218,6 +262,15 @@ const Recommended: React.FC = () => {
         });
       }
 
+      if (playMode === "AUDIOBOOK" && historyAlbums.length > 0) {
+        newSections.push({
+          id: "history",
+          title: "继续收听",
+          items: historyAlbums,
+          type: "album",
+        });
+      }
+
       setSections(sortSections(newSections));
 
       // Save to cache with type-specific keys
@@ -226,6 +279,9 @@ const Recommended: React.FC = () => {
       cacheUtils.set(getCacheKey(CACHE_KEY_ARTISTS), latestArtists);
       if (playMode === "MUSIC") {
         cacheUtils.set(getCacheKey(CACHE_KEY_TRACKS), latestTracks);
+      }
+      if (playMode === "AUDIOBOOK") {
+        cacheUtils.set(getCacheKey(CACHE_KEY_HISTORY), historyAlbums);
       }
     } catch (error) {
       console.error("Failed to load recommended sections:", error);
@@ -263,6 +319,11 @@ const Recommended: React.FC = () => {
         const data = res.data || [];
         updateSection(sectionId, data);
         cacheUtils.set(getCacheKey(CACHE_KEY_TRACKS), data);
+      } else if (sectionId === "history" && user) {
+        const res = await getAlbumHistory(user.id, 0, albumSize, "AUDIOBOOK");
+        const data = res.data?.list?.map((item: any) => item.album) || [];
+        updateSection(sectionId, data);
+        cacheUtils.set(getCacheKey(CACHE_KEY_HISTORY), data);
       }
     } catch (error) {
       console.error(`Failed to refresh ${sectionId} section:`, error);
@@ -295,6 +356,17 @@ const Recommended: React.FC = () => {
     });
   };
 
+  const handlePlaySection = (sectionId: string) => {
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section || section.items.length === 0) return;
+
+    if (section.type === "track") {
+      const tracks = section.items as Track[];
+      setPlaylist(tracks);
+      play(tracks[0]);
+    }
+  };
+
   // Show skeleton loading on initial load
   if (loading) {
     return (
@@ -324,48 +396,265 @@ const Recommended: React.FC = () => {
             <Title level={3} className={styles.sectionTitle}>
               {section.title}
             </Title>
-            <Button
-              type="text"
-              className={styles.refreshButton}
-              onClick={() => refreshSection(section.id)}
-              loading={refreshing === section.id}
-            >
-              换一批 <SyncOutlined spin={refreshing === section.id} />
-            </Button>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {section.id === "tracks" && section.items.length > 0 && (
+                <Button
+                  type="primary"
+                  icon={<PlayCircleOutlined />}
+                  size="small"
+                  onClick={() => handlePlaySection(section.id)}
+                >
+                  播放全部
+                </Button>
+              )}
+              <Button
+                type="text"
+                className={styles.refreshButton}
+                onClick={() => refreshSection(section.id)}
+                loading={refreshing === section.id}
+              >
+                换一批 <SyncOutlined spin={refreshing === section.id} />
+              </Button>
+            </div>
           </div>
 
-          <Row gutter={[24, 24]}>
-            {section.items.map((item: any) => (
-              <Col key={item.id}>
-                {section.type === "artist" ? (
-                  <div
-                    className={styles.artistCard}
-                    onClick={() => handleArtistClick(item.id)}
-                    style={{ cursor: "pointer", textAlign: "center" }}
-                  >
-                    <Avatar
-                      src={
-                        item.avatar
-                          ? item.avatar.startsWith("http")
-                            ? item.avatar
-                            : `${getBaseURL()}${item.avatar}`
-                          : `https://picsum.photos/seed/${item.id}/300/300`
-                      }
-                      size={120}
-                      icon={!item.avatar && item.name[0]}
-                    />
-                    <div style={{ marginTop: 8, fontWeight: 500 }}>
-                      {item.name}
+          {section.type === "track" ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Split tracks into 2 rows */}
+              {[0, 1].map((rowIndex) => (
+                <div
+                  key={rowIndex}
+                  style={{ display: "flex", gap: 16, flexWrap: "wrap" }}
+                >
+                  {section.items
+                    .filter((_, index) => index % 2 === rowIndex)
+                    .map((item: any) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          width: 240,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: 10,
+                          backgroundColor: "rgba(255,255,255,0.05)",
+                          borderRadius: 8,
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                        }}
+                        onClick={() => {
+                          play(item);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255,255,255,0.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255,255,255,0.05)";
+                        }}
+                      >
+                        <img
+                          src={
+                            item.cover
+                              ? item.cover.startsWith("http")
+                                ? item.cover
+                                : `${getBaseURL()}${item.cover}`
+                              : `https://picsum.photos/seed/${item.id}/100/100`
+                          }
+                          alt={item.name}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 4,
+                            objectFit: "cover",
+                          }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Text
+                            strong
+                            ellipsis
+                            style={{ display: "block", fontSize: 14 }}
+                          >
+                            {item.name}
+                          </Text>
+                          <Text
+                            type="secondary"
+                            ellipsis
+                            style={{ display: "block", fontSize: 12 }}
+                          >
+                            {item.artist}
+                          </Text>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            alignItems: "center",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <HeartOutlined
+                            style={{
+                              fontSize: 16,
+                              color: item.likedByUsers?.some(
+                                (like: any) => like.userId === user?.id
+                              )
+                                ? "#ff4d4f"
+                                : themeToken.colorTextSecondary,
+                              cursor: "pointer",
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const isLiked = item.likedByUsers?.some(
+                                (like: any) => like.userId === user?.id
+                              );
+                              if (user) {
+                                if (isLiked) {
+                                  toggleTrackUnLike(item.id, user.id).then(
+                                    () => {
+                                      // Update local state
+                                      setSections((prev) =>
+                                        prev.map((s) =>
+                                          s.id === section.id
+                                            ? {
+                                                ...s,
+                                                items: s.items.map((t: any) =>
+                                                  t.id === item.id
+                                                    ? {
+                                                        ...t,
+                                                        likedByUsers:
+                                                          t.likedByUsers?.filter(
+                                                            (l: any) =>
+                                                              l.userId !==
+                                                              user.id
+                                                          ),
+                                                      }
+                                                    : t
+                                                ),
+                                              }
+                                            : s
+                                        )
+                                      );
+                                    }
+                                  );
+                                } else {
+                                  toggleTrackLike(item.id, user.id).then(() => {
+                                    // Update local state
+                                    setSections((prev) =>
+                                      prev.map((s) =>
+                                        s.id === section.id
+                                          ? {
+                                              ...s,
+                                              items: s.items.map((t: any) =>
+                                                t.id === item.id
+                                                  ? {
+                                                      ...t,
+                                                      likedByUsers: [
+                                                        ...(t.likedByUsers ||
+                                                          []),
+                                                        {
+                                                          id: 0,
+                                                          trackId: item.id,
+                                                          userId: user.id,
+                                                          createdAt:
+                                                            new Date(),
+                                                        },
+                                                      ],
+                                                    }
+                                                  : t
+                                              ),
+                                            }
+                                          : s
+                                      )
+                                    );
+                                  });
+                                }
+                              }
+                            }}
+                          />
+                          <EnterOutlined
+                            style={{
+                              fontSize: 16,
+                              cursor: "pointer",
+                              color: themeToken.colorTextSecondary,
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Add to playlist next - insert after currently playing track
+                              const currentPlaylist = [...(usePlayerStore.getState().playlist || [])];
+                              const currentTrack = usePlayerStore.getState().currentTrack;
+                              
+                              if (currentTrack) {
+                                const currentIndex = currentPlaylist.findIndex(
+                                  (t) => t.id === currentTrack.id
+                                );
+                                
+                                // Remove the track if it already exists in the playlist
+                                const existingIndex = currentPlaylist.findIndex(
+                                  (t) => t.id === item.id
+                                );
+                                if (existingIndex !== -1) {
+                                  currentPlaylist.splice(existingIndex, 1);
+                                  // Adjust currentIndex if needed
+                                  if (existingIndex <= currentIndex) {
+                                    currentPlaylist.splice(currentIndex, 0, item);
+                                  } else {
+                                    currentPlaylist.splice(currentIndex + 1, 0, item);
+                                  }
+                                } else {
+                                  // Insert after current track
+                                  currentPlaylist.splice(currentIndex + 1, 0, item);
+                                }
+                              } else {
+                                // No current track, add to beginning
+                                currentPlaylist.unshift(item);
+                              }
+                              
+                              setPlaylist(currentPlaylist);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Row gutter={[24, 24]}>
+              {section.items.map((item: any) => (
+                <Col key={item.id}>
+                  {section.type === "artist" ? (
+                    <div
+                      className={styles.artistCard}
+                      onClick={() => handleArtistClick(item.id)}
+                      style={{ cursor: "pointer", textAlign: "center" }}
+                    >
+                      <Avatar
+                        src={
+                          item.avatar
+                            ? item.avatar.startsWith("http")
+                              ? item.avatar
+                              : `${getBaseURL()}${item.avatar}`
+                            : `https://picsum.photos/seed/${item.id}/300/300`
+                        }
+                        size={120}
+                        style={{
+                          boxShadow: "0 8px 20px rgba(0, 0, 0, 0.3)",
+                        }}
+                        icon={!item.avatar && item.name[0]}
+                      />
+                      <div style={{ marginTop: 8, fontWeight: 500 }}>
+                        {item.name}
+                      </div>
                     </div>
-                  </div>
-                ) : section.type === "track" ? (
-                  <Cover item={item} isTrack={true} />
-                ) : (
-                  <Cover item={item} />
-                )}
-              </Col>
-            ))}
-          </Row>
+                  ) : (
+                    <Cover item={item} />
+                  )}
+                </Col>
+              ))}
+            </Row>
+          )}
         </div>
       ))}
 

@@ -2,7 +2,7 @@ import { usePlayer } from "@/src/context/PlayerContext";
 import { EvilIcons, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import { getLatestArtists, getLatestTracks, getRecentAlbums, getRecommendedAlbums } from "@soundx/services";
+import { getAlbumHistory, getLatestArtists, getLatestTracks, getRecentAlbums, getRecommendedAlbums, toggleTrackLike, toggleTrackUnLike } from "@soundx/services";
 import * as Device from "expo-device";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -39,9 +39,9 @@ interface Section {
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const { playTrack, startRadioMode } = usePlayer();
+  const { playTrack, startRadioMode, playTrackList, trackList, currentTrack } = usePlayer();
   const { mode, setMode } = usePlayMode();
-  const { sourceType } = useAuth();
+  const { user, sourceType } = useAuth();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -81,9 +81,14 @@ export default function HomeScreen() {
           promises.push(getLatestTracks("MUSIC", true, pageSize));
         }
 
+        if (mode === "AUDIOBOOK" && user) {
+          promises.push(getAlbumHistory(user.id, 0, pageSize, "AUDIOBOOK"));
+        }
+
         const results = await Promise.all(promises);
         const [artistsRes, recentRes, recommendedRes] = results;
         const tracksRes = mode === "MUSIC" ? results[3] : null;
+        const historyRes = mode === "AUDIOBOOK" ? results[3] : null;
 
         const newSections: Section[] = [
           {
@@ -112,6 +117,15 @@ export default function HomeScreen() {
             title: "上新单曲",
             data: tracksRes.data,
             type: "track",
+          });
+        }
+
+        if (mode === "AUDIOBOOK" && historyRes?.code === 200) {
+          newSections.push({
+            id: "history",
+            title: "继续收听",
+            data: historyRes.data.list.map((item: any) => item.album),
+            type: "album",
           });
         }
 
@@ -259,6 +273,9 @@ export default function HomeScreen() {
       } else if (sectionId === "tracks") {
         const res = await getLatestTracks("MUSIC", true, pageSize);
         if (res.code === 200) newData = res.data;
+      } else if (sectionId === "history" && user) {
+        const res = await getAlbumHistory(user.id, 0, pageSize, "AUDIOBOOK");
+        if (res.code === 200) newData = res.data.list.map((item: any) => item.album);
       }
 
       if (newData.length > 0) {
@@ -357,9 +374,19 @@ export default function HomeScreen() {
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
                 {section.title}
               </Text>
-              <TouchableOpacity onPress={() => refreshSection(section.id)}>
-                <EvilIcons name="refresh" size={20} color={colors.primary} />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                {section.id === "tracks" && section.data.length > 0 && (
+                   <TouchableOpacity 
+                    onPress={() => playTrackList(section.data, 0)}
+                    style={{ backgroundColor: colors.primary, borderRadius: 20, padding: 4 }}
+                   >
+                     <Ionicons name="play-sharp" size={16} color={colors.background} />
+                   </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => refreshSection(section.id)}>
+                  <EvilIcons name="refresh" size={20} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {section.id === "tracks" ? (
@@ -405,6 +432,119 @@ export default function HomeScreen() {
                           >
                             {track.artist}
                           </Text>
+                        </View>
+                        <View style={styles.trackActions}>
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              const isLiked = track.likedByUsers?.some(
+                                (like: any) => like.userId === user?.id
+                              );
+                              if (user) {
+                                if (isLiked) {
+                                  toggleTrackUnLike(track.id, user.id).then(() => {
+                                    // Update local state
+                                    setSections((prev) =>
+                                      prev.map((s) =>
+                                        s.id === section.id
+                                          ? {
+                                              ...s,
+                                              data: s.data.map((t: any) =>
+                                                t.id === track.id
+                                                  ? {
+                                                      ...t,
+                                                      likedByUsers: t.likedByUsers?.filter(
+                                                        (l: any) => l.userId !== user.id
+                                                      ),
+                                                    }
+                                                  : t
+                                              ),
+                                            }
+                                          : s
+                                      )
+                                    );
+                                  });
+                                } else {
+                                  toggleTrackLike(track.id, user.id).then(() => {
+                                    // Update local state
+                                    setSections((prev) =>
+                                      prev.map((s) =>
+                                        s.id === section.id
+                                          ? {
+                                              ...s,
+                                              data: s.data.map((t: any) =>
+                                                t.id === track.id
+                                                  ? {
+                                                      ...t,
+                                                      likedByUsers: [
+                                                        ...(t.likedByUsers || []),
+                                                        {
+                                                          id: 0,
+                                                          trackId: track.id,
+                                                          userId: user.id,
+                                                          createdAt: new Date(),
+                                                        },
+                                                      ],
+                                                    }
+                                                  : t
+                                              ),
+                                            }
+                                          : s
+                                      )
+                                    );
+                                  });
+                                }
+                              }
+                            }}
+                            style={styles.actionButton}
+                          >
+                            <Ionicons
+                              name={
+                                track.likedByUsers?.some(
+                                  (like: any) => like.userId === user?.id
+                                )
+                                  ? "heart"
+                                  : "heart-outline"
+                              }
+                              size={18}
+                              color={
+                                track.likedByUsers?.some(
+                                  (like: any) => like.userId === user?.id
+                                )
+                                  ? colors.primary
+                                  : colors.secondary
+                              }
+                            />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={async (e) => {
+                              e.stopPropagation();
+                              // Add to queue after current track without affecting playback
+                              const newList = [...trackList];
+                              const currentIndex = newList.findIndex(
+                                (t) => t.id === currentTrack?.id
+                              );
+                              
+                              if (currentIndex !== -1) {
+                                // Insert after current track in the list
+                                newList.splice(currentIndex + 1, 0, track);
+                              } else {
+                                // If no current track, add to beginning
+                                newList.unshift(track);
+                              }
+                              
+                              // Update the trackList state directly without triggering playback
+                              // This is a workaround - ideally we'd have a dedicated method
+                              playTrackList(newList, -1);
+                            }}
+                            style={styles.actionButton}
+                          >
+                            <Ionicons
+                              name="return-down-back"
+                              size={18}
+                              color={colors.secondary}
+                            />
+                          </TouchableOpacity>
                         </View>
                       </TouchableOpacity>
                     ))}
@@ -563,6 +703,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
+    flex: 1,
   },
   viewAll: {
     color: "#00ff00",
@@ -685,6 +826,14 @@ const styles = StyleSheet.create({
   },
   trackArtist: {
     fontSize: 12,
+  },
+  trackActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  actionButton: {
+    padding: 4,
   },
   modalContainer: {
     flex: 1,

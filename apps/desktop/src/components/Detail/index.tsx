@@ -50,7 +50,7 @@ const Detail: React.FC = () => {
   const { token } = theme.useToken();
   const { play, setPlaylist } = usePlayerStore();
 
-  const pageSize = 20;
+  const pageSize = 20000;
 
   const { run: likeAlbum } = useRequest(toggleAlbumLike, {
     manual: true,
@@ -182,8 +182,6 @@ const Detail: React.FC = () => {
     setHasMore(true);
     fetchTracks(id, 0, sort, keyword);
   };
-
-  console.log("tracks", tracks);
 
   return (
     <div

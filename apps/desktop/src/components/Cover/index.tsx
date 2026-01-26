@@ -4,7 +4,12 @@ import {
   MoreOutlined,
   PlayCircleOutlined,
 } from "@ant-design/icons";
-import { getAlbumById, getAlbumTracks, toggleAlbumLike, toggleAlbumUnLike } from "@soundx/services";
+import {
+  getAlbumById,
+  getAlbumTracks,
+  toggleAlbumLike,
+  toggleAlbumUnLike,
+} from "@soundx/services";
 import type { MenuProps } from "antd";
 import { Dropdown, Skeleton, theme, Typography } from "antd";
 import React, { useEffect, useState } from "react";
@@ -34,6 +39,7 @@ const Cover: CoverComponent = ({ item, size, isTrack = false, onClick }) => {
   const { play, setPlaylist } = usePlayerStore();
   const [isLiked, setIsLiked] = useState(false);
   const { user } = useAuthStore();
+  const { token: themeToken } = theme.useToken();
 
   useEffect(() => {
     // Check if album is liked
@@ -49,7 +55,7 @@ const Cover: CoverComponent = ({ item, size, isTrack = false, onClick }) => {
         // @ts-ignore - likedByUsers is included in response
         const likedByUsers = res.data.likedByUsers || [];
         const isLikedByCurrentUser = likedByUsers.some(
-          (like: any) => like.userId === user?.id
+          (like: any) => like.userId === user?.id,
         );
         setIsLiked(isLikedByCurrentUser);
       }
@@ -159,7 +165,8 @@ const Cover: CoverComponent = ({ item, size, isTrack = false, onClick }) => {
       <div className={styles.imageWrapper}>
         <img
           src={
-            resolveArtworkUri(item) || `https://picsum.photos/seed/${item.id}/300/300`
+            resolveArtworkUri(item) ||
+            `https://picsum.photos/seed/${item.id}/300/300`
           }
           alt={item.name}
           className={styles.image}
@@ -195,7 +202,10 @@ const Cover: CoverComponent = ({ item, size, isTrack = false, onClick }) => {
       <Title level={5} className={styles.title}>
         {item.name}
       </Title>
-      <div className={styles.artist}>
+      <div
+        className={styles.artist}
+        style={{ color: themeToken.colorTextSecondary }}
+      >
         {item.artist}
       </div>
     </div>

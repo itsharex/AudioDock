@@ -9,7 +9,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { Dropdown, List, theme, Typography } from "antd";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { TrackType, type Album, type Track } from "../../models";
 import { resolveArtworkUri } from "../../services/trackResolver";
 import { useAuthStore } from "../../store/auth";
@@ -54,24 +54,43 @@ const getCoverUrl = (item?: Track | Album | null) => {
 }) => {
   const { token } = theme.useToken();
   const { user } = useAuthStore();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current && currentTrack) {
+      const activeElement = containerRef.current.querySelector(
+        `.${styles.activeItem}`
+      );
+      if (activeElement) {
+        activeElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [currentTrack?.id, tracks]);
 
   return (
-    <List
-      className={className}
-      style={style}
-      itemLayout="horizontal"
-      dataSource={tracks}
-      renderItem={(item: Track) => {
-        const isCurrent = currentTrack?.id === item.id;
-        // @ts-ignore
-        const isLiked = item.likedByUsers?.some(
-          (like: any) => like.userId === user?.id
-        );
+    <div ref={containerRef} style={{ height: "100%" }}>
+      <List
+        className={className}
+        style={style}
+        itemLayout="horizontal"
+        dataSource={tracks}
+        renderItem={(item: Track) => {
+          const isCurrent = currentTrack?.id === item.id;
+          // @ts-ignore
+          const isLiked = item.likedByUsers?.some(
+            (like: any) => like.userId === user?.id
+          );
 
-        return (
-          <List.Item
-            className={styles.playlistItem}
-            onClick={() => item.id === currentTrack?.id && isPlaying ? onPuse(item) : onPlay(item)}
+          return (
+            <List.Item
+              className={`${styles.playlistItem} ${
+                isCurrent ? styles.activeItem : ""
+              }`}
+              onClick={() =>
+                item.id === currentTrack?.id && isPlaying
+                  ? onPuse(item)
+                  : onPlay(item)
+              }
             style={{
               cursor: "pointer",
               backgroundColor: isCurrent
@@ -217,6 +236,7 @@ const getCoverUrl = (item?: Track | Album | null) => {
           </List.Item>
         );
       }}
-    />
+      />
+    </div>
   );
 };
