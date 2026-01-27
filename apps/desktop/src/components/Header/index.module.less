@@ -92,6 +92,22 @@
   }
 }
 
+@keyframes radioPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.15);
+  }
+}
+
+.radioActive {
+  animation: radioPulse 2s ease-in-out infinite;
+  opacity: 1 !important;
+}
+
 .avatar {
   width: 32px;
   height: 32px;

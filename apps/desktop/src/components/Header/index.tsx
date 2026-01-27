@@ -1,52 +1,54 @@
 import {
-    CustomerServiceOutlined,
-    DatabaseOutlined,
-    DeleteOutlined,
-    FolderOutlined,
-    GithubOutlined,
-    HeartOutlined,
-    ImportOutlined,
-    LeftOutlined,
-    LogoutOutlined,
-    ReadOutlined,
-    ReloadOutlined,
-    RetweetOutlined,
-    RightOutlined,
-    RollbackOutlined,
-    SearchOutlined,
-    SettingOutlined,
-    WifiOutlined,
+  CustomerServiceOutlined,
+  DatabaseOutlined,
+  DeleteOutlined,
+  FolderOutlined,
+  GithubOutlined,
+  HeartOutlined,
+  ImportOutlined,
+  LeftOutlined,
+  LogoutOutlined,
+  MoonOutlined,
+  ReadOutlined,
+  ReloadOutlined,
+  RetweetOutlined,
+  RightOutlined,
+  RollbackOutlined,
+  SearchOutlined,
+  SettingOutlined,
+  SunOutlined,
+  WifiOutlined,
 } from "@ant-design/icons";
 import {
-    addSearchRecord,
-    check,
-    clearSearchHistory,
-    createImportTask,
-    getHotSearches,
-    getImportTask,
-    getRunningImportTask,
-    getSearchHistory,
-    searchAll,
-    setServiceConfig,
-    SOURCEMAP,
-    SOURCETIPSMAP,
-    TaskStatus,
-    useNativeAdapter,
-    useSubsonicAdapter,
-    type ImportTask,
-    type SearchResults as SearchResultsType,
+  addSearchRecord,
+  check,
+  clearSearchHistory,
+  createImportTask,
+  getHotSearches,
+  getImportTask,
+  getRunningImportTask,
+  getSearchHistory,
+  searchAll,
+  setServiceConfig,
+  SOURCEMAP,
+  SOURCETIPSMAP,
+  TaskStatus,
+  useNativeAdapter,
+  useSubsonicAdapter,
+  type ImportTask,
+  type SearchResults as SearchResultsType,
 } from "@soundx/services";
 import {
-    Button,
-    Flex,
-    Input,
-    Modal,
-    Popover,
-    Progress,
-    Segmented,
-    theme,
-    Tooltip,
-    Typography,
+  Button,
+  Flex,
+  Input,
+  Modal,
+  Popover,
+  Progress,
+  Segmented,
+  theme,
+  Tooltip,
+  Typography,
 } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -159,7 +161,7 @@ const Header: React.FC = () => {
   const message = useMessage();
   const navigate = useNavigate();
   const location = useLocation();
-  const {} = useTheme();
+  const { themeSetting, toggleTheme } = useTheme();
   const { token } = theme.useToken();
   const pollTimerRef = useRef<number | null>(null);
   const [modal, contextHolder] = Modal.useModal();
@@ -179,6 +181,7 @@ const Header: React.FC = () => {
 
   // Mode state: 'music' | 'audiobook'
   const { mode: playMode, setMode: setPlayMode } = usePlayMode();
+  const isRadioMode = usePlayerStore((state) => state.isRadioMode);
   const { logout, user } = useAuthStore();
 
   // Import task state
@@ -445,7 +448,7 @@ const Header: React.FC = () => {
         {playMode === TrackType.MUSIC && !isSubsonicSource() && (
           <Tooltip title="情景电台">
             <div
-              className={styles.actionIcon}
+              className={`${styles.actionIcon} ${isRadioMode ? styles.radioActive : ""}`}
               style={actionIconStyle}
               onClick={() => usePlayerStore.getState().startRadioMode()}
             >
@@ -558,6 +561,29 @@ const Header: React.FC = () => {
             }}
           >
             <DatabaseOutlined />
+          </div>
+        </Tooltip>
+        <Tooltip
+          title={
+            themeSetting === "dark"
+              ? "切换至亮色模式"
+              : themeSetting === "light"
+                ? "切换至跟随系统"
+                : "切换至暗色模式"
+          }
+        >
+          <div
+            className={styles.actionIcon}
+            style={actionIconStyle}
+            onClick={toggleTheme}
+          >
+            {themeSetting === "dark" ? (
+              <MoonOutlined />
+            ) : themeSetting === "light" ? (
+              <SunOutlined />
+            ) : (
+              <span style={{ fontSize: "10px", fontWeight: "bold" }}>Auto</span>
+            )}
           </div>
         </Tooltip>
         <Popover

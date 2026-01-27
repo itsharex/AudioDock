@@ -52,6 +52,7 @@ export interface TrackListProps {
   onPlay?: (track: Track, tracks: Track[]) => void;
   onRefresh?: () => void; // Called after delete/like etc if needed
   rowSelection?: any; // Ant Design Table rowSelection
+  albumId?: number | string;
 }
 
 const TrackList: React.FC<TrackListProps> = ({
@@ -67,6 +68,7 @@ const TrackList: React.FC<TrackListProps> = ({
   onPlay,
   onRefresh,
   rowSelection,
+  albumId,
 }) => {
   const message = useMessage();
   const { user } = useAuthStore();
@@ -100,7 +102,7 @@ const TrackList: React.FC<TrackListProps> = ({
     
     // Attempt to use albumId from track if available, though Detail component passed the context albumId.
     // Ideally tracks in the list have albumId populated.
-    play(track, undefined, shouldResume ? track.progress : 0);
+    play(track, albumId, shouldResume ? track.progress : 0);
   };
 
   const handleToggleLike = async (

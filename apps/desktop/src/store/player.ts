@@ -95,7 +95,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
   // Progress Reporting Helper
   let lastReportTime = 0;
-  const ATTEMPT_REPORT_INTERVAL = 10; // Seconds
+  const ATTEMPT_REPORT_INTERVAL = 5; // Seconds (unified with Mobile)
 
   const reportProgress = (state: PlayerState, force = false) => {
     const { currentTrack, currentTime, isPlaying, activeMode } = state;

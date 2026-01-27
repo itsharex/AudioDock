@@ -325,6 +325,7 @@ const Detail: React.FC = () => {
                     }
                   : undefined
               }
+              albumId={album?.id}
             />
           </Col>
         </Row>

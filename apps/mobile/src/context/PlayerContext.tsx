@@ -685,15 +685,27 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     ]);
   };
 
-  const recordHistory = async () => {
+  // Progress reporting interval (5 seconds)
+  const REPORT_INTERVAL = 5000;
+  const lastReportTimeRef = useRef(0);
+
+  const recordHistory = async (force = false) => {
     if (currentTrackRef.current && user) {
+      const currentTime = Math.floor(positionRef.current);
+      const now = Date.now();
+      
+      // Only report if forced or interval has passed
+      if (!force && (now - lastReportTimeRef.current < REPORT_INTERVAL)) {
+        return;
+      }
+      
       const deviceName = Device.modelName || "Mobile Device";
       const deviceId = device?.id;
       try {
         await addToHistory(
           currentTrackRef.current.id,
           user.id,
-          Math.floor(positionRef.current),
+          currentTime,
           deviceName,
           deviceId,
           isSynced
@@ -705,9 +717,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           await reportAudiobookProgress({
             userId: user.id,
             trackId: currentTrackRef.current.id,
-            progress: Math.floor(positionRef.current),
+            progress: currentTime,
           });
         }
+        
+        lastReportTimeRef.current = now;
       } catch (e) {
         console.log(
           "Background history sync skipped due to network/transient error"
@@ -868,24 +882,27 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [trackList, isSynced, sessionId]);
 
+  // Force report on track change
   useEffect(() => {
     if (currentTrack) {
-      recordHistory();
+      recordHistory(true);
     }
   }, [currentTrack?.id]);
 
+  // Force report on pause
   useEffect(() => {
     if (!isPlaying && currentTrack) {
-      recordHistory();
+      recordHistory(true);
     }
   }, [isPlaying]);
 
+  // Regular interval reporting (5 seconds)
   useEffect(() => {
     let interval: any;
     if (isPlaying) {
       interval = setInterval(() => {
         recordHistory();
-      }, 15000);
+      }, REPORT_INTERVAL);
     }
     return () => {
       if (interval) clearInterval(interval);
