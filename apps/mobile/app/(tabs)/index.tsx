@@ -8,6 +8,8 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   FlatList,
   RefreshControl,
   ScrollView,
@@ -39,7 +41,7 @@ interface Section {
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const { playTrack, startRadioMode, playTrackList, trackList, currentTrack } = usePlayer();
+  const { playTrack, startRadioMode, playTrackList, trackList, currentTrack, isRadioMode } = usePlayer();
   const { mode, setMode } = usePlayMode();
   const { user, sourceType } = useAuth();
   const insets = useSafeAreaInsets();
@@ -50,6 +52,32 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [tempSections, setTempSections] = useState<Section[]>([]);
+
+  const radioAnim = React.useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isRadioMode) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(radioAnim, {
+            toValue: 1,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(radioAnim, {
+            toValue: 0,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      radioAnim.setValue(0);
+      radioAnim.stopAnimation();
+    }
+  }, [isRadioMode]);
 
   const isTablet = Device.deviceType === Device.DeviceType.TABLET;
   const pageSize = !isTablet ? 8 : 16;
@@ -338,10 +366,30 @@ export default function HomeScreen() {
                 }}
                 style={[
                   styles.modeToggle,
-                  { backgroundColor: colors.card, marginRight: 10 },
+                  { 
+                    backgroundColor: colors.card, 
+                    marginRight: 10,
+                    borderWidth: isRadioMode ? 1 : 0,
+                    borderColor: colors.primary + '40'
+                  },
                 ]}
               >
-                <Ionicons name="radio-outline" size={20} color={colors.primary} />
+                <Animated.View style={{ 
+                  transform: [
+                    { 
+                      scale: radioAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 1.25]
+                      }) 
+                    }
+                  ],
+                  opacity: radioAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 0.6]
+                  })
+                }}>
+                  <Ionicons name="radio-outline" size={20} color={colors.primary} />
+                </Animated.View>
               </TouchableOpacity>
             )}
             {sourceType !== "Subsonic" && (
