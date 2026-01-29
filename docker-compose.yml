@@ -22,6 +22,7 @@ services:
       - CACHE_DIR=/covers
       - DATABASE_URL=file:/data/dev.db
       - JWT_SECRET=/.jwt_secret
+      - PORT=3000
 
     # 挂载数据文件和缓存，使用 Docker 命名卷更安全
     volumes:
