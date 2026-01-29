@@ -78,6 +78,12 @@ jobs:
                     "title": "## 🧪 Other Changes",
                     "labels": []
                 }
+              ],
+              "label_extractor": [
+                {
+                  "pattern": "^(feat|fix|docs|style|refactor|perf|test|chore|revert|ci|build)",
+                  "target": "$1"
+                }
               ]
             }
         env:
