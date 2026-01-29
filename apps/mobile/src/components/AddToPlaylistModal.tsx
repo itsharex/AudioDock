@@ -1,25 +1,32 @@
 import { Ionicons } from "@expo/vector-icons";
-import { addTracksToPlaylist, addTrackToPlaylist, getPlaylists } from "@soundx/services";
+import {
+  addTracksToPlaylist,
+  addTrackToPlaylist,
+  getPlaylists,
+} from "@soundx/services";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
+import { usePlayer } from "../context/PlayerContext";
 import { useTheme } from "../context/ThemeContext";
-import { Playlist, TrackType } from "../models";
+import { Playlist, Track, TrackType } from "../models";
 import { usePlayMode } from "../utils/playMode";
 
 interface AddToPlaylistModalProps {
   visible: boolean;
   trackId?: number | string | null;
   trackIds?: (number | string)[];
+  tracks?: Track[];
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -28,12 +35,14 @@ export const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({
   visible,
   trackId,
   trackIds,
+  tracks,
   onClose,
   onSuccess,
 }) => {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { mode } = usePlayMode();
+  const { insertTracksNext } = usePlayer();
   const insets = useSafeAreaInsets();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(false);
@@ -82,6 +91,24 @@ export const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({
     }
   };
 
+  const handleAddToCurrentQueue = async () => {
+    if (!tracks) return;
+
+    let tracksToAdd: Track[] = [];
+    if (trackIds && trackIds.length > 0) {
+      tracksToAdd = tracks.filter((t) => trackIds.includes(t.id));
+    } else if (trackId) {
+      tracksToAdd = tracks.filter((t) => t.id === trackId);
+    }
+
+    if (tracksToAdd.length > 0) {
+      await insertTracksNext(tracksToAdd);
+      onSuccess?.();
+      onClose();
+      Alert.alert("已添加到播放列表");
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -97,45 +124,88 @@ export const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({
         <View
           style={[
             styles.content,
-            { backgroundColor: colors.card, paddingBottom: insets.bottom + 20, width: '100%', maxWidth: 450 },
+            {
+              backgroundColor: colors.card,
+              paddingBottom: insets.bottom + 20,
+              width: "100%",
+              maxWidth: 450,
+            },
           ]}
           onStartShouldSetResponder={() => true}
         >
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>添加到播放列表</Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              添加到播放列表
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color={colors.secondary} />
             </TouchableOpacity>
           </View>
 
+          {/* todo: add current playlist */}
+
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ margin: 40 }} />
-          ) : (
-            <FlatList
-              data={playlists}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.playlistItem, { borderBottomColor: colors.border }]}
-                  onPress={() => handleAddToPlaylist(item.id)}
-                  disabled={addingId !== null}
-                >
-                  <Ionicons name="list" size={20} color={colors.primary} />
-                  <Text style={[styles.playlistName, { color: colors.text }]} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  {addingId === item.id && (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <View style={styles.empty}>
-                  <Text style={{ color: colors.secondary }}>暂无播放列表</Text>
-                </View>
-              }
-              style={{ maxHeight: 400 }}
+            <ActivityIndicator
+              size="large"
+              color={colors.primary}
+              style={{ margin: 40 }}
             />
+          ) : (
+            <View>
+              <TouchableOpacity
+                style={[
+                  styles.playlistItem,
+                  { borderBottomColor: colors.border },
+                ]}
+                onPress={handleAddToCurrentQueue}
+              >
+                <Ionicons
+                  name="play-forward-circle"
+                  size={24}
+                  color={colors.primary}
+                />
+                <Text
+                  style={[styles.playlistName, { color: colors.text }]}
+                  numberOfLines={1}
+                >
+                  当前播放列表
+                </Text>
+              </TouchableOpacity>
+
+              <FlatList
+                data={playlists}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.playlistItem,
+                      { borderBottomColor: colors.border },
+                    ]}
+                    onPress={() => handleAddToPlaylist(item.id)}
+                    disabled={addingId !== null}
+                  >
+                    <Ionicons name="list" size={20} color={colors.primary} />
+                    <Text
+                      style={[styles.playlistName, { color: colors.text }]}
+                      numberOfLines={1}
+                    >
+                      {item.name}
+                    </Text>
+                    {addingId === item.id && (
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <View style={styles.empty}>
+                    <Text style={{ color: colors.secondary }}>
+                      暂无其他播放列表
+                    </Text>
+                  </View>
+                }
+                style={{ maxHeight: 320 }}
+              />
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -148,7 +218,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
-    alignItems: 'center',
+    alignItems: "center",
   },
   content: {
     borderTopLeftRadius: 20,

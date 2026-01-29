@@ -2,14 +2,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { deleteTrack } from "@soundx/services";
 import React from "react";
 import {
-    Alert,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePlayer } from "../context/PlayerContext";
 import { useTheme } from "../context/ThemeContext";
 import { Track } from "../models";
 import { downloadTrack } from "../services/downloadManager";
@@ -33,29 +34,46 @@ export const TrackMoreModal: React.FC<TrackMoreModalProps> = ({
 }) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { insertTracksNext } = usePlayer();
 
   if (!track) return null;
 
   const handleDelete = () => {
-    Alert.alert("删除歌曲", `确定要永久删除“${track.name}”吗？这将同时删除源文件。`, [
-      { text: "取消", style: "cancel" },
-      {
-        text: "确定删除",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const res = await deleteTrack(track.id);
-            if (res.code === 200) {
-              onDeleteSuccess?.(track.id);
-              onClose();
+    Alert.alert(
+      "删除歌曲",
+      `确定要永久删除“${track.name}”吗？这将同时删除源文件。`,
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "确定删除",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const res = await deleteTrack(track.id);
+              if (res.code === 200) {
+                onDeleteSuccess?.(track.id as number);
+                onClose();
+              }
+            } catch (e) {
+              console.error("Failed to delete track", e);
+              Alert.alert("错误", "删除失败，请稍后重试");
             }
-          } catch (e) {
-            console.error("Failed to delete track", e);
-            Alert.alert("错误", "删除失败，请稍后重试");
-          }
+          },
         },
-      },
-    ]);
+      ],
+    );
+  };
+
+  const handleAddToCurrentQueue = async () => {
+    if (!track) return;
+
+    let tracksToAdd: Track[] = [track];
+
+    if (tracksToAdd.length > 0) {
+      await insertTracksNext(tracksToAdd);
+      onClose();
+      Alert.alert("已添加到当前播放列表");
+    }
   };
 
   return (
@@ -73,15 +91,26 @@ export const TrackMoreModal: React.FC<TrackMoreModalProps> = ({
         <View
           style={[
             styles.content,
-            { backgroundColor: colors.card, paddingBottom: insets.bottom + 20, width: '100%', maxWidth: 450 },
+            {
+              backgroundColor: colors.card,
+              paddingBottom: insets.bottom + 20,
+              width: "100%",
+              maxWidth: 450,
+            },
           ]}
           onStartShouldSetResponder={() => true}
         >
           <View style={styles.header}>
-            <Text style={[styles.trackName, { color: colors.text }]} numberOfLines={1}>
+            <Text
+              style={[styles.trackName, { color: colors.text }]}
+              numberOfLines={1}
+            >
               {track.name}
             </Text>
-            <Text style={[styles.trackArtist, { color: colors.secondary }]} numberOfLines={1}>
+            <Text
+              style={[styles.trackArtist, { color: colors.secondary }]}
+              numberOfLines={1}
+            >
               {track.artist}
             </Text>
           </View>
@@ -89,12 +118,31 @@ export const TrackMoreModal: React.FC<TrackMoreModalProps> = ({
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => {
-                onAddToPlaylist(track);
-                onClose();
+              onAddToPlaylist(track);
+              onClose();
             }}
           >
             <Ionicons name="add-circle-outline" size={24} color={colors.text} />
-            <Text style={[styles.menuText, { color: colors.text }]}>添加到播放列表</Text>
+            <Text style={[styles.menuText, { color: colors.text }]}>
+              添加到播放列表
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, { borderBottomColor: colors.border }]}
+            onPress={handleAddToCurrentQueue}
+          >
+            <Ionicons
+              name="play-forward-circle"
+              size={24}
+              color={colors.primary}
+            />
+            <Text
+              style={[styles.menuText, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              当前播放列表
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -104,7 +152,11 @@ export const TrackMoreModal: React.FC<TrackMoreModalProps> = ({
               onClose();
             }}
           >
-            <Ionicons name="information-circle-outline" size={24} color={colors.text} />
+            <Ionicons
+              name="information-circle-outline"
+              size={24}
+              color={colors.text}
+            />
             <Text style={[styles.menuText, { color: colors.text }]}>属性</Text>
           </TouchableOpacity>
 
@@ -120,23 +172,29 @@ export const TrackMoreModal: React.FC<TrackMoreModalProps> = ({
               }
             }}
           >
-            <Ionicons name="cloud-download-outline" size={24} color={colors.text} />
+            <Ionicons
+              name="cloud-download-outline"
+              size={24}
+              color={colors.text}
+            />
             <Text style={[styles.menuText, { color: colors.text }]}>下载</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={handleDelete}
-          >
+          <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
             <Ionicons name="trash-outline" size={24} color="#ff4d4f" />
             <Text style={[styles.menuText, styles.dangerText]}>删除歌曲</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.menuItem, { marginTop: 10, justifyContent: 'center' }]}
+            style={[
+              styles.menuItem,
+              { marginTop: 10, justifyContent: "center" },
+            ]}
             onPress={onClose}
           >
-            <Text style={[styles.menuText, { color: colors.secondary }]}>取消</Text>
+            <Text style={[styles.menuText, { color: colors.secondary }]}>
+              取消
+            </Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -149,7 +207,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
-    alignItems: 'center',
+    alignItems: "center",
   },
   content: {
     borderTopLeftRadius: 20,

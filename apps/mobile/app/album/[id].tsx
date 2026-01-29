@@ -224,16 +224,30 @@ export default function AlbumDetailScreen() {
         </Text>
         <View style={styles.headerRight}>
           {isSelectionMode ? (
-            <TouchableOpacity
-              disabled={!selectedTrackIds.length}
-              onPress={handleDownloadSelected}
-            >
-              <Ionicons
-                name="cloud-download-outline"
-                size={24}
-                color={selectedTrackIds.length ? colors.text : colors.secondary}
-              />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                disabled={!selectedTrackIds.length}
+                onPress={() => {
+                  setAddToPlaylistVisible(true);
+                }}
+              >
+                <Ionicons
+                  name="add-circle-outline"
+                  size={24}
+                  color={selectedTrackIds.length ? colors.text : colors.secondary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={!selectedTrackIds.length}
+                onPress={handleDownloadSelected}
+              >
+                <Ionicons
+                  name="cloud-download-outline"
+                  size={24}
+                  color={selectedTrackIds.length ? colors.text : colors.secondary}
+                />
+              </TouchableOpacity>
+            </View>
           ) : (
             <TouchableOpacity onPress={() => setAlbumMoreVisible(true)}>
               <Ionicons
@@ -335,7 +349,7 @@ export default function AlbumDetailScreen() {
                   }}
                 >
                   <Ionicons
-                    name="cloud-download-outline"
+                    name="list-outline"
                     size={24}
                     color={colors.secondary}
                   />
@@ -500,7 +514,14 @@ export default function AlbumDetailScreen() {
       <AddToPlaylistModal
         visible={addToPlaylistVisible}
         trackId={selectedTrack?.id ?? null}
-        trackIds={selectedTrack ? undefined : tracks.map((t) => t.id)}
+        trackIds={
+          selectedTrack 
+            ? undefined 
+            : isSelectionMode && selectedTrackIds.length > 0
+              ? selectedTrackIds
+              : tracks.map((t) => t.id)
+        }
+        tracks={tracks}
         onClose={() => {
           setAddToPlaylistVisible(false);
           setSelectedTrack(null);
@@ -555,7 +576,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   headerRight: {
-    width: 28, // Matches backButton size roughly for centering title
+    minWidth: 28, // Matches backButton size roughly for centering title
     alignItems: "center",
   },
   moreButton: {

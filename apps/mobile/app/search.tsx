@@ -1,30 +1,30 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
-    addSearchRecord,
-    clearSearchHistory,
-    getHotSearches,
-    getSearchHistory,
-    searchAlbums,
-    searchArtists,
-    searchTracks,
-    toggleAlbumLike,
-    toggleAlbumUnLike,
-    toggleTrackLike,
-    toggleTrackUnLike,
-    UserAlbumLike,
-    UserTrackLike
+  addSearchRecord,
+  clearSearchHistory,
+  getHotSearches,
+  getSearchHistory,
+  searchAlbums,
+  searchArtists,
+  searchTracks,
+  toggleAlbumLike,
+  toggleAlbumUnLike,
+  toggleTrackLike,
+  toggleTrackUnLike,
+  UserAlbumLike,
+  UserTrackLike
 } from "@soundx/services";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AddToPlaylistModal } from "../src/components/AddToPlaylistModal";
@@ -312,7 +312,7 @@ export default function SearchScreen() {
                     >
                       <Text style={[styles.rank, i < 3 && { color: colors.primary }]}>{i + 1}</Text>
                       <Text style={[styles.hotKeyword, { color: colors.text }]}>{hot.keyword}</Text>
-                      {i < 3 && <View style={[styles.hotTag, { backgroundColor: colors.primary }]}><Text style={styles.hotTagText}>HOT</Text></View>}
+                      {i < 3 && <View style={[styles.hotTag, { backgroundColor: colors.primary }]}><Text style={[styles.hotTagText, { color: colors.background }]}>HOT</Text></View>}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -484,7 +484,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   hotTagText: {
-    color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
   }

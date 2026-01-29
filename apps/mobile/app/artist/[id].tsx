@@ -4,6 +4,7 @@ import { TrackMoreModal } from "@/src/components/TrackMoreModal";
 import { usePlayer } from "@/src/context/PlayerContext";
 import { useTheme } from "@/src/context/ThemeContext";
 import { Album, Artist, Track, TrackType } from "@/src/models";
+import { downloadTracks } from "@/src/services/downloadManager";
 import { getImageUrl } from "@/src/utils/image";
 import { usePlayMode } from "@/src/utils/playMode";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +18,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -39,6 +41,10 @@ export default function ArtistDetailScreen() {
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [moreModalVisible, setMoreModalVisible] = useState(false);
   const [addToPlaylistVisible, setAddToPlaylistVisible] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<(number | string)[]>(
+    [],
+  );
 
   useEffect(() => {
     if (id) {
@@ -73,6 +79,39 @@ export default function ArtistDetailScreen() {
     }
   };
 
+  const toggleTrackSelection = (trackId: number | string) => {
+    setSelectedTrackIds((prev) =>
+      prev.includes(trackId)
+        ? prev.filter((id) => id !== trackId)
+        : [...prev, trackId],
+    );
+  };
+
+  const handleDownloadSelected = () => {
+    const selectedTracks = tracks.filter((t) =>
+      selectedTrackIds.includes(t.id),
+    );
+    if (selectedTracks.length === 0) {
+      Alert.alert("提示", "请先选择要下载的曲目");
+      return;
+    }
+    Alert.alert("批量下载", `确定要下载${selectedTrackIds?.length}首曲目吗？`, [
+      { text: "取消", style: "cancel" },
+      {
+        text: "确定",
+        onPress: () => {
+          downloadTracks(selectedTracks, (completed: number, total: number) => {
+            if (completed === total) {
+              Alert.alert("下载完成", `已成功下载 ${total} 首曲目`);
+              setIsSelectionMode(false);
+              setSelectedTrackIds([]);
+            }
+          });
+        },
+      },
+    ]);
+  };
+
   if (loading) {
     return (
       <View
@@ -105,17 +144,59 @@ export default function ArtistDetailScreen() {
         style={[styles.customHeader, { backgroundColor: colors.background }]}
       >
         <TouchableOpacity
-          onPress={() => router.back()}
           style={styles.backButton}
+          onPress={() =>
+            isSelectionMode ? setIsSelectionMode(false) : router.back()
+          }
         >
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Ionicons
+            name={isSelectionMode ? "close" : "chevron-back"}
+            size={28}
+            color={colors.text}
+          />
         </TouchableOpacity>
+        {isSelectionMode && (
+          <View style={styles.headerRight}>
+            <Text
+              style={[styles.headerTitle, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              已选择 {selectedTrackIds.length} 项
+            </Text>
+            <TouchableOpacity
+              disabled={!selectedTrackIds.length}
+              onPress={() => {
+                setAddToPlaylistVisible(true);
+              }}
+            >
+              <Ionicons
+                name="add-circle-outline"
+                size={24}
+                color={selectedTrackIds.length ? colors.text : colors.secondary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              disabled={!selectedTrackIds.length}
+              onPress={handleDownloadSelected}
+              style={{ marginLeft: 12 }}
+            >
+              <Ionicons
+                name="cloud-download-outline"
+                size={24}
+                color={selectedTrackIds.length ? colors.text : colors.secondary}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
       <ScrollView>
         <View style={styles.header}>
           <Image
             source={{
-              uri: getImageUrl(artist.avatar, `https://picsum.photos/seed/${artist.id}/300/300`),
+              uri: getImageUrl(
+                artist.avatar,
+                `https://picsum.photos/seed/${artist.id}/300/300`,
+              ),
             }}
             style={styles.avatar}
           />
@@ -147,13 +228,18 @@ export default function ArtistDetailScreen() {
                 <View style={styles.albumCoverContainer}>
                   <Image
                     source={{
-                      uri: getImageUrl(album.cover, `https://picsum.photos/seed/${album.id}/200/200`),
+                      uri: getImageUrl(
+                        album.cover,
+                        `https://picsum.photos/seed/${album.id}/200/200`,
+                      ),
                     }}
                     style={styles.albumCover}
                   />
-                  {(album.type === "AUDIOBOOK") &&
+                  {album.type === "AUDIOBOOK" &&
                     (album as any).progress > 0 && (
-                      <View style={[styles.progressOverlay, { width: 120 - 6 }]}>
+                      <View
+                        style={[styles.progressOverlay, { width: 120 - 6 }]}
+                      >
                         <View
                           style={[
                             styles.progressBar,
@@ -201,7 +287,10 @@ export default function ArtistDetailScreen() {
                   <View style={styles.albumCoverContainer}>
                     <Image
                       source={{
-                        uri: getImageUrl(album.cover, `https://picsum.photos/seed/${album.id}/200/200`),
+                        uri: getImageUrl(
+                          album.cover,
+                          `https://picsum.photos/seed/${album.id}/200/200`,
+                        ),
                       }}
                       style={styles.albumCover}
                     />
@@ -244,27 +333,97 @@ export default function ArtistDetailScreen() {
               >
                 所有单曲 ({tracks.length})
               </Text>
-              <TouchableOpacity
-                onPress={() => tracks.length > 0 && playTrackList(tracks, 0)}
-                style={[styles.playButton, { backgroundColor: colors.primary }]}
-              >
-                <Ionicons name="play" size={20} color={colors.background} />
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {!isSelectionMode ? (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setIsSelectionMode(true);
+                        setSelectedTrackIds([]);
+                      }}
+                      style={[
+                        styles.actionButton,
+                        { backgroundColor: colors.card },
+                      ]}
+                    >
+                      <Ionicons
+                        name="list-outline"
+                        size={20}
+                        color={colors.secondary}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() =>
+                        tracks.length > 0 && playTrackList(tracks, 0)
+                      }
+                      style={[
+                        styles.playButton,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    >
+                      <Ionicons
+                        name="play"
+                        size={20}
+                        color={colors.background}
+                      />
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (selectedTrackIds?.length === tracks.length) {
+                        setSelectedTrackIds([]);
+                      } else {
+                        setSelectedTrackIds(tracks.map((t) => t.id));
+                      }
+                    }}
+                    style={[
+                      styles.actionButton,
+                      { backgroundColor: colors.card },
+                    ]}
+                  >
+                    <Ionicons
+                      name="list-outline"
+                      size={20}
+                      color={colors.secondary}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
             {tracks.map((track, index) => (
               <TouchableOpacity
                 key={track.id}
                 style={[styles.trackItem, { borderBottomColor: colors.border }]}
                 onPress={() => {
+                  if (isSelectionMode) {
+                    toggleTrackSelection(track.id);
+                    return;
+                  }
                   playTrackList(tracks, index);
                 }}
                 onLongPress={() => {
+                  if (isSelectionMode) return;
                   setSelectedTrack(track);
                   setMoreModalVisible(true);
                 }}
               >
                 <View style={styles.trackIndexContainer}>
-                  {currentTrack?.id === track.id && isPlaying ? (
+                  {isSelectionMode ? (
+                    <Ionicons
+                      name={
+                        selectedTrackIds.includes(track.id)
+                          ? "checkbox"
+                          : "square-outline"
+                      }
+                      size={20}
+                      color={
+                        selectedTrackIds.includes(track.id)
+                          ? colors.primary
+                          : colors.secondary
+                      }
+                    />
+                  ) : currentTrack?.id === track.id && isPlaying ? (
                     <PlayingIndicator />
                   ) : (
                     <Text
@@ -285,7 +444,10 @@ export default function ArtistDetailScreen() {
                 <View style={styles.trackInfo}>
                   <Image
                     source={{
-                      uri: getImageUrl(track.cover, `https://picsum.photos/seed/${track.id}/20/20`),
+                      uri: getImageUrl(
+                        track.cover,
+                        `https://picsum.photos/seed/${track.id}/20/20`,
+                      ),
                     }}
                     alt=""
                     style={{ width: 20, height: 20 }}
@@ -325,7 +487,9 @@ export default function ArtistDetailScreen() {
 
       <AddToPlaylistModal
         visible={addToPlaylistVisible}
-        trackId={selectedTrack?.id ?? null}
+        trackId={isSelectionMode ? null : (selectedTrack?.id ?? null)}
+        trackIds={isSelectionMode ? selectedTrackIds : undefined}
+        tracks={tracks}
         onClose={() => setAddToPlaylistVisible(false)}
       />
     </View>
@@ -345,6 +509,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingBottom: 10,
     zIndex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   backButton: {
     padding: 5,
@@ -384,6 +550,23 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     justifyContent: "center",
+    alignItems: "center",
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    marginHorizontal: 10,
+  },
+  headerRight: {
+    flexDirection: "row",
     alignItems: "center",
   },
   albumCard: {

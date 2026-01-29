@@ -59,6 +59,7 @@ interface PlayerContextType {
   togglePlayMode: () => void;
   playNext: () => Promise<void>;
   playPrevious: () => Promise<void>;
+  insertTracksNext: (tracks: Track[]) => Promise<void>;
   isSynced: boolean;
   sessionId: string | null;
   handleDisconnect: () => void;
@@ -97,6 +98,7 @@ const PlayerContext = createContext<PlayerContextType>({
   togglePlayMode: () => {},
   playNext: async () => {},
   playPrevious: async () => {},
+  insertTracksNext: async () => {},
   isSynced: false,
   sessionId: null,
   handleDisconnect: () => {},
@@ -949,6 +951,36 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setSleepTimerState(expiryTime);
   };
 
+  const insertTracksNext = async (tracksToInsert: Track[]) => {
+    try {
+      if (!currentTrack || trackList.length === 0) {
+        // If nothing playing, just play these tracks
+        await playTrackList(tracksToInsert, 0);
+        return;
+      }
+
+      // Find current track index
+      const currentIndex = trackList.findIndex(t => t.id === currentTrack.id);
+      if (currentIndex === -1) {
+        // Fallback: append to end
+        const newList = [...trackList, ...tracksToInsert];
+        setTrackList(newList);
+        return;
+      }
+
+      // Insert after current track
+      const newList = [
+        ...trackList.slice(0, currentIndex + 1),
+        ...tracksToInsert,
+        ...trackList.slice(currentIndex + 1)
+      ];
+      
+      setTrackList(newList);
+    } catch (e) {
+      console.error("Failed to insert tracks next", e);
+    }
+  };
+
   const clearSleepTimer = () => {
     setSleepTimerState(null);
   };
@@ -982,6 +1014,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         togglePlayMode,
         playNext,
         playPrevious,
+        insertTracksNext,
         isSynced,
         sessionId,
         handleDisconnect,
