@@ -197,57 +197,49 @@ export class AlbumService {
 
   // 随机推荐：用户未听过的专辑
   async getRandomUnlistenedAlbums(userId: number, limit = 8, type?: TrackType): Promise<Album[]> {
+    // 1. 获取用户已听过的专辑 ID
     const listened = await this.prisma.userAlbumHistory.findMany({
       where: { userId },
       select: { albumId: true },
     });
     const listenedIds = listened.map((r) => r.albumId);
+    const listenedSet = new Set(listenedIds);
 
-    const whereClause: any = listenedIds.length ? { id: { notIn: listenedIds }, status: 'ACTIVE' } : { status: 'ACTIVE' };
-    if (type) {
-      whereClause.type = type;
-    }
+    // 2. 获取所有符合条件的专辑 ID (按类型和状态过滤)
+    const allMatchingAlbums = await this.prisma.album.findMany({
+      where: { status: 'ACTIVE', ...(type ? { type } : {}) },
+      select: { id: true },
+    });
+    const allIds = allMatchingAlbums.map(a => a.id);
 
-    const candidates = await this.prisma.album.findMany({
-      where: whereClause,
+    // 3. 区分已听和未听的 ID
+    const unlistenedIds = allIds.filter(id => !listenedSet.has(id));
+    const matchedListenedIds = allIds.filter(id => listenedSet.has(id));
+
+    // 4. 随机选取未听过的 ID
+    const pickedUnlistenedIds = unlistenedIds
+      .sort(() => Math.random() - 0.5)
+      .slice(0, limit);
+
+    // 5. 获取未听过专辑的详情
+    let result = await this.prisma.album.findMany({
+      where: { id: { in: pickedUnlistenedIds } },
     });
 
-    // Strategy: Result = Shuffled Unlistened + Random Listened (if needed) to meet limit
-    let result: Album[] = [];
-
-    if (candidates.length <= limit) {
-      result = candidates;
-    } else {
-      result = candidates.sort(() => Math.random() - 0.5).slice(0, limit);
-    }
-
-    // Fallback: If not enough unlistened content, fill with listened content
+    // 6. 如果未听过的不足，从已听过的里面补充
     if (result.length < limit) {
       const needed = limit - result.length;
+      const pickedListenedIds = matchedListenedIds
+        .sort(() => Math.random() - 0.5)
+        .slice(0, needed);
       
-      const fallbackWhere: any = { status: 'ACTIVE' };
-      if (type) fallbackWhere.type = type;
-      if (listenedIds.length > 0) {
-        fallbackWhere.id = { in: listenedIds };
-      }
-
-      // If we have listened IDs, pick from them. 
-      // If user has listened to nothing (unlikely here since we are in the fallback block imply candidates were exhausted/empty which means everything IS listened or DB is empty),
-      // we just pick random if listenedIds exist.
-      if (listenedIds.length > 0) {
-        const fallbackCandidates = await this.prisma.album.findMany({
-          where: fallbackWhere,
-        });
-        const fallbackShuffled = fallbackCandidates.sort(() => Math.random() - 0.5).slice(0, needed);
-        result = [...result, ...fallbackShuffled];
-      } else {
-         // This block handles the edge case where the DB is just small (total albums < limit),
-         // and we already fetched all available 'candidates' (which were all available albums).
-         // So 'result' already contains everything possible. No fallback needed.
-      }
+      const fallbackResult = await this.prisma.album.findMany({
+        where: { id: { in: pickedListenedIds } },
+      });
+      result = [...result, ...fallbackResult];
     }
 
-    // Shuffle one last time to mix unlistened and listened
+    // 7. 最后随机打乱一次
     result = result.sort(() => Math.random() - 0.5);
 
     if (type === 'AUDIOBOOK') {
