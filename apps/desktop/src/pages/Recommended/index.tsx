@@ -676,7 +676,10 @@ const Recommended: React.FC = () => {
               {section.items.map((item: any) => (
                 <Col key={item.id}>
                   {section.type === "artist" ? (
-                    <div
+                    <Flex
+                      vertical
+                      align="center"
+                      gap={8}
                       className={styles.artistCard}
                       onClick={() => handleArtistClick(item.id)}
                       style={{ cursor: "pointer", textAlign: "center" }}
@@ -695,10 +698,8 @@ const Recommended: React.FC = () => {
                         }}
                         icon={!item.avatar && item.name[0]}
                       />
-                      <div style={{ marginTop: 8, fontWeight: 500 }}>
-                        {item.name}
-                      </div>
-                    </div>
+                      <Typography.Text>{item.name}</Typography.Text>
+                    </Flex>
                   ) : (
                     <Cover item={item} isHistory={section.id === "history"} />
                   )}
