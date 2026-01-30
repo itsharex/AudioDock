@@ -169,7 +169,7 @@ const SongList = ({
         <FlatList
           data={tracks}
           style={{ flex: 1 }}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={false} 
           contentContainerStyle={styles.listContent}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item, index }) => (
@@ -295,6 +295,7 @@ const ArtistList = () => {
         numColumns={numColumns}
         columnWrapperStyle={{ gap: GAP, marginBottom: 15 }}
         style={{ flex: 1 }}
+        key={`artist-list-${numColumns}`} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         keyExtractor={(item) => item.id.toString()}
@@ -390,6 +391,7 @@ const AlbumList = () => {
       <FlatList
         data={albums}
         numColumns={numColumns}
+        key={`album-list-${numColumns}`} 
         columnWrapperStyle={{ gap: GAP, marginBottom: 15 }}
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
@@ -467,7 +469,7 @@ export default function LibraryScreen() {
   const { playTrackList } = usePlayer();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"songs" | "artists" | "albums">(
-    "artists",
+    "songs",
   );
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedTrackIds, setSelectedTrackIds] = useState<(number | string)[]>(

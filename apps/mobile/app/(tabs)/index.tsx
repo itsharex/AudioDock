@@ -18,12 +18,9 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-import {
-  RenderItemParams,
-  ScaleDecorator,
-} from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 // import * as AudioEq from '../../modules/audio-eq';
+import { initBaseURL } from "@/src/https";
 import { CachedImage } from "../../src/components/CachedImage";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
@@ -50,8 +47,6 @@ export default function HomeScreen() {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [tempSections, setTempSections] = useState<Section[]>([]);
 
   const radioAnim = React.useRef(new Animated.Value(0)).current;
 
@@ -186,26 +181,6 @@ export default function HomeScreen() {
     [mode]
   );
 
-   useEffect(() => {
-    console.log("====================================");
-    console.log("正在检查原生模块链接状态...");
-    
-    // 1. 打印整个模块对象，看看是不是空对象
-    // console.log("AudioEq Module Object:", AudioEq);
-
-    // 2. 尝试调用原生方法（如果你的 index.ts 做了封装）
-    try {
-      // 这里的 initEqualizer 只是触发一下，看看会不会报错
-      // 如果报错 "undefined is not a function"，说明原生模块没连上
-      // const result = AudioEq.initEqualizer(0); 
-      // console.log("调用 initEqualizer 结果:", result);
-    } catch (e) {
-      console.error("调用失败，原生模块可能未链接:", e);
-    }
-    
-    console.log("====================================");
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
       const loadOrder = async () => {
@@ -234,53 +209,13 @@ export default function HomeScreen() {
   );
 
   useEffect(() => {
-    loadData();
+    initBaseURL().then(() => loadData())
   }, [loadData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadData(true);
   }, [loadData]);
-
-  const handleReorder = () => {
-    setTempSections([...sections]);
-    setModalVisible(true);
-  };
-
-  const saveOrder = async () => {
-    try {
-      const order = tempSections.map((s) => s.id);
-      await AsyncStorage.setItem("section_order", JSON.stringify(order));
-      setSections(tempSections);
-      setModalVisible(false);
-    } catch (e) {
-      console.error("Failed to save order:", e);
-    }
-  };
-
-  const renderReorderItem = ({
-    item,
-    drag,
-    isActive,
-  }: RenderItemParams<Section>) => {
-    return (
-      <ScaleDecorator>
-        <TouchableOpacity
-          onLongPress={drag}
-          disabled={isActive}
-          style={[
-            styles.modalItem,
-            { backgroundColor: isActive ? colors.card : "transparent" },
-          ]}
-        >
-          <Text style={[styles.modalItemText, { color: colors.text }]}>
-            {item.title}
-          </Text>
-          <Ionicons name="menu" size={24} color={colors.secondary} />
-        </TouchableOpacity>
-      </ScaleDecorator>
-    );
-  };
 
   const refreshSection = async (sectionId: string) => {
     try {

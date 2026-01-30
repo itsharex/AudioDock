@@ -1,4 +1,5 @@
 import { useAuth } from "@/src/context/AuthContext";
+import { initBaseURL } from "@/src/https";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBar } from "@react-navigation/bottom-tabs";
 import { check } from "@soundx/services";
@@ -13,12 +14,14 @@ export default function TabLayout() {
   const { logout } = useAuth();
 
   useEffect(() => {
-    check().then(res => {
-      if (res.code === 401) {
-        logout();
-      }
-    })
-  }, [])
+    initBaseURL().then(() => {
+      check().then((res) => {
+        if (res.code === 401) {
+          logout();
+        }
+      });
+    });
+  }, []);
 
   return (
     <Tabs
@@ -71,7 +74,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
     </Tabs>
   );
 }
