@@ -9,6 +9,7 @@ import {
   LeftOutlined,
   LogoutOutlined,
   MoonOutlined,
+  PlusOutlined,
   ReadOutlined,
   ReloadOutlined,
   RetweetOutlined,
@@ -31,7 +32,6 @@ import {
   searchAll,
   setServiceConfig,
   SOURCEMAP,
-  SOURCETIPSMAP,
   TaskStatus,
   useNativeAdapter,
   useSubsonicAdapter,
@@ -40,12 +40,15 @@ import {
 } from "@soundx/services";
 import {
   Button,
+  Card,
+  Empty,
   Flex,
   Input,
   Modal,
   Popover,
   Progress,
   Segmented,
+  Spin,
   theme,
   Tooltip,
   Typography,
@@ -68,36 +71,84 @@ import emby from "../../assets/emby.png";
 import logo from "../../assets/logo.png";
 import subsonic from "../../assets/subsonic.png";
 
+const { Text } = Typography;
+
 const ServerSwitcherModal: React.FC<{
   onSelect: (url: string, type: string) => void;
 }> = ({ onSelect }) => {
   const [sourceType, setSourceType] = useState<string>(
     () => localStorage.getItem("selectedSourceType") || "AudioDock",
   );
-  const [history, setHistory] = useState<{ value: string }[]>([]);
+  const [configs, setConfigs] = useState<any[]>([]);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const { token: themeToken } = theme.useToken();
+  const navigate = useNavigate();
+
+  const loadConfigs = () => {
+    const configKey = `sourceConfig_${sourceType}`;
+    const data = localStorage.getItem(configKey);
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        setConfigs(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        setConfigs([]);
+      }
+    } else {
+      // Migration from legacy history if exists
+      const historyKey = `serverHistory_${sourceType}`;
+      const historyData = localStorage.getItem(historyKey);
+      if (historyData) {
+        try {
+          const history = JSON.parse(historyData);
+          const migrated = history.map((h: any, index: number) => ({
+            id: `migrated_${Date.now()}_${index}`,
+            internal: h.value,
+            external: "",
+            name: `历史记录 ${index + 1}`,
+          }));
+          setConfigs(migrated);
+          localStorage.setItem(configKey, JSON.stringify(migrated));
+        } catch {
+          setConfigs([]);
+        }
+      } else {
+        setConfigs([]);
+      }
+    }
+  };
 
   useEffect(() => {
-    const historyKey = `serverHistory_${sourceType}`;
-    const data = localStorage.getItem(historyKey);
-    if (data) {
-      setHistory(JSON.parse(data));
-    } else {
-      setHistory(
-        sourceType === "AudioDock" ? [{ value: "http://localhost:3000" }] : [],
-      );
-    }
+    loadConfigs();
   }, [sourceType]);
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const configKey = `sourceConfig_${sourceType}`;
+    const newConfigs = configs.filter((c) => c.id !== id);
+    localStorage.setItem(configKey, JSON.stringify(newConfigs));
+    setConfigs(newConfigs);
+  };
+
+  const handleConnect = async (address: string, configId: string) => {
+    setLoadingId(`${configId}_${address}`);
+    try {
+      // Connect to the specific address chosen by the user
+      onSelect(address, sourceType);
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   const sourceOptions = Object.keys(SOURCEMAP).map((key) => ({
     label: (
       <Flex gap={8} align="center">
         {key === "Emby" ? (
-          <img style={{ width: 24 }} src={emby} />
+          <img style={{ width: 20 }} src={emby} />
         ) : key === "Subsonic" ? (
-          <img style={{ width: 24 }} src={subsonic} />
+          <img style={{ width: 20 }} src={subsonic} />
         ) : (
-          <img style={{ width: 24 }} src={logo} />
+          <img style={{ width: 20 }} src={logo} />
         )}
         <span>{key}</span>
       </Flex>
@@ -116,42 +167,131 @@ const ServerSwitcherModal: React.FC<{
           block
         />
       </div>
-      <div
-        style={{
-          marginBottom: 16,
-          fontSize: 12,
-          color: themeToken.colorTextSecondary,
-        }}
+
+      <Flex
+        vertical
+        gap={12}
+        style={{ maxHeight: 400, overflowY: "auto", padding: "4px" }}
       >
-        {SOURCETIPSMAP[sourceType as keyof typeof SOURCETIPSMAP]}
-      </div>
-      <Flex vertical gap={8} style={{ maxHeight: 300, overflowY: "auto" }}>
-        {history.map((item) => (
-          <Button
-            key={item.value}
-            onClick={() => onSelect(item.value, sourceType)}
-            type={
-              localStorage.getItem("serverAddress") === item.value &&
-              localStorage.getItem("selectedSourceType") === sourceType
-                ? "primary"
-                : "default"
-            }
-            style={{ textAlign: "left", height: "auto", padding: "8px 16px" }}
-          >
-            {item.value}
-          </Button>
-        ))}
-        {history.length === 0 && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: 20,
-              color: themeToken.colorTextTertiary,
-            }}
-          >
-            暂无历史记录
-          </div>
+        {configs.map((item) => {
+          const currentAddress = localStorage.getItem("serverAddress");
+          const currentSource = localStorage.getItem("selectedSourceType");
+          const isSourceMatch = currentSource === sourceType;
+
+          const renderAddressRow = (label: string, address: string) => {
+            if (!address) return null;
+            const isActive = isSourceMatch && currentAddress === address;
+            const isConnecting = loadingId === `${item.id}_${address}`;
+
+            return (
+              <Flex
+                key={address}
+                justify="space-between"
+                align="center"
+                style={{
+                  padding: "6px 8px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  backgroundColor: isActive
+                    ? `${themeToken.colorPrimary}15`
+                    : "transparent",
+                  transition: "all 0.2s",
+                }}
+                className="address-row"
+              >
+                <Flex vertical gap={2} style={{ flex: 1 }}>
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    {label}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: isActive ? themeToken.colorPrimary : undefined,
+                    }}
+                  >
+                    {address}
+                  </Text>
+                </Flex>
+                <Flex align="center" gap={8}>
+                  {isActive ? (
+                    <Text type="success" style={{ fontSize: 10 }}>
+                      ● 已连接
+                    </Text>
+                  ) : (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleConnect(address, item.id);
+                      }}
+                      style={{ fontSize: 10 }}
+                    >
+                      连接
+                    </Button>
+                  )}
+                  {isConnecting && <Spin size="small" />}
+                </Flex>
+              </Flex>
+            );
+          };
+
+          return (
+            <Card
+              key={item.id}
+              size="small"
+              className={styles.switcherCard}
+              style={{
+                borderColor:
+                  isSourceMatch &&
+                  (currentAddress === item.internal ||
+                    currentAddress === item.external)
+                    ? themeToken.colorPrimary
+                    : undefined,
+              }}
+            >
+              <Flex vertical gap={8}>
+                <Flex justify="space-between" align="center">
+                  <Text strong style={{ fontSize: 14 }}>
+                    {item.name || "默认服务器"}
+                  </Text>
+                  <Button
+                    type="text"
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(item.id, e);
+                    }}
+                  />
+                </Flex>
+                <Flex vertical gap={4}>
+                  {renderAddressRow("内网地址", item.internal)}
+                  {renderAddressRow("外网地址", item.external)}
+                </Flex>
+              </Flex>
+            </Card>
+          );
+        })}
+
+        {configs.length === 0 && (
+          <Empty
+            description="暂无历史数据源"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
         )}
+
+        <Button
+          type="dashed"
+          block
+          icon={<PlusOutlined />}
+          style={{ marginTop: 8 }}
+          onClick={() => {
+            Modal.destroyAll();
+            navigate("/login", { state: { type: sourceType } });
+          }}
+        >
+          添加新数据源
+        </Button>
       </Flex>
     </div>
   );
