@@ -1,0 +1,17 @@
+changelog:
+  exclude:
+    labels:
+      - skip-releasenotes
+    authors:
+      - octocat
+  categories:
+    - title: '🚀 Features'
+      labels:
+        - feat
+        - feature
+    - title: '🐛 Fixes'
+      labels:
+        - fix
+        - bug
+    - title: '🧪 Other Changes'
+      labels: [] # All other commits will fall here
