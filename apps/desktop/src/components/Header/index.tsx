@@ -221,7 +221,11 @@ const ServerSwitcherModal: React.FC<{
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
+                        // check().then(res => {
+                        // if (res.code === 200) {
                         handleConnect(address, item.id);
+                        // }
+                        // })
                       }}
                       style={{ fontSize: 10 }}
                     >
